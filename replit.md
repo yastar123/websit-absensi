@@ -71,6 +71,14 @@ src/
 - Tests: `npm run test`
 
 ## Recent Changes
+- January 28, 2026: Enhanced role-specific dashboards
+  - Admin Dashboard: Overview seluruh karyawan, statistik kehadiran, grafik mingguan, notifikasi pending approval
+  - Supervisor Dashboard: Overview tim, anggota tim, approval pending, quick access ke team management
+  - Staff Dashboard: Quick clock in/out, sisa cuti, pengajuan pending, reminder absen keluar
+- January 28, 2026: Enhanced Employees management
+  - Added role filter (Admin/Supervisor/Staff)
+  - Added supervisor assignment for staff
+  - Display supervisor info on employee card
 - January 28, 2026: Added 3 user roles (Admin, Supervisor, Staff)
   - Added role-based sidebar navigation
   - Created Team page for supervisors
