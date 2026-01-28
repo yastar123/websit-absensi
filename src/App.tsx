@@ -13,6 +13,7 @@ import Reports from "@/pages/Reports";
 import Employees from "@/pages/Employees";
 import Departments from "@/pages/Departments";
 import Settings from "@/pages/Settings";
+import Team from "@/pages/Team";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/leave" element={<Leave />} />
             <Route path="/overtime" element={<Overtime />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/settings" element={<Settings />} />

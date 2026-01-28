@@ -7,7 +7,8 @@ export interface Employee {
   position: string;
   joinDate: string;
   phone: string;
-  role: 'admin' | 'employee';
+  role: 'admin' | 'supervisor' | 'staff';
+  supervisorId?: string;
   avatar?: string;
   leaveQuota: number;
   usedLeave: number;
@@ -105,37 +106,63 @@ export const initializeDefaultData = () => {
     },
     {
       id: 'emp-2',
+      name: 'Supervisor Demo',
+      email: 'supervisor@company.com',
+      department: 'Engineering',
+      position: 'Team Lead',
+      joinDate: '2021-03-01',
+      phone: '081234567891',
+      role: 'supervisor',
+      leaveQuota: 12,
+      usedLeave: 3,
+    },
+    {
+      id: 'emp-3',
+      name: 'Staff Demo',
+      email: 'staff@company.com',
+      department: 'Engineering',
+      position: 'Software Engineer',
+      joinDate: '2022-06-15',
+      phone: '081234567892',
+      role: 'staff',
+      supervisorId: 'emp-2',
+      leaveQuota: 12,
+      usedLeave: 5,
+    },
+    {
+      id: 'emp-4',
       name: 'Budi Santoso',
       email: 'budi@company.com',
       department: 'Engineering',
       position: 'Software Engineer',
       joinDate: '2022-03-01',
-      phone: '081234567891',
-      role: 'employee',
+      phone: '081234567893',
+      role: 'staff',
+      supervisorId: 'emp-2',
       leaveQuota: 12,
-      usedLeave: 5,
+      usedLeave: 4,
     },
     {
-      id: 'emp-3',
+      id: 'emp-5',
       name: 'Siti Rahayu',
       email: 'siti@company.com',
       department: 'Marketing',
       position: 'Marketing Executive',
       joinDate: '2021-06-15',
-      phone: '081234567892',
-      role: 'employee',
+      phone: '081234567894',
+      role: 'staff',
       leaveQuota: 12,
       usedLeave: 3,
     },
     {
-      id: 'emp-4',
+      id: 'emp-6',
       name: 'Ahmad Wijaya',
       email: 'ahmad@company.com',
       department: 'Finance',
       position: 'Accountant',
       joinDate: '2023-01-10',
-      phone: '081234567893',
-      role: 'employee',
+      phone: '081234567895',
+      role: 'staff',
       leaveQuota: 12,
       usedLeave: 1,
     },
@@ -319,6 +346,29 @@ export const setCurrentUser = (user: Employee): void => {
 };
 export const logout = (): void => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+};
+
+// Team helpers for supervisors
+export const getTeamMembers = (supervisorId: string): Employee[] => {
+  return getEmployees().filter(e => e.supervisorId === supervisorId);
+};
+
+export const getTeamAttendance = (supervisorId: string): AttendanceRecord[] => {
+  const teamMembers = getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  return getAttendanceRecords().filter(a => teamIds.includes(a.employeeId));
+};
+
+export const getTeamLeaveRequests = (supervisorId: string): LeaveRequest[] => {
+  const teamMembers = getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  return getLeaveRequests().filter(l => teamIds.includes(l.employeeId));
+};
+
+export const getTeamOvertimeRequests = (supervisorId: string): OvertimeRequest[] => {
+  const teamMembers = getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  return getOvertimeRequests().filter(o => teamIds.includes(o.employeeId));
 };
 
 // Statistics helpers

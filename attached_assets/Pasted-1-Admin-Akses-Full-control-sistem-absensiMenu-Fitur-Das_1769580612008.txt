@@ -1,0 +1,386 @@
+1. Admin
+Akses: Full control sistem absensiMenu & Fitur:Dashboard
+
+Overview kehadiran seluruh karyawan real-time
+Statistik absensi hari ini (hadir, izin, sakit, alpha)
+Grafik tren kehadiran bulanan/tahunan
+Alert keterlambatan dan ketidakhadiran
+Ringkasan pengajuan pending approval
+Total jam lembur bulan ini
+Notifikasi sistem
+Manajemen Karyawan
+
+Tambah karyawan baru
+Edit data karyawan (nama, email, telepon, alamat)
+Upload foto karyawan
+Set jabatan dan departemen
+Assign supervisor untuk setiap staff
+Atur status (aktif/non-aktif/resign)
+Import data karyawan (Excel/CSV)
+Export data karyawan
+Reset password karyawan
+Manajemen Absensi
+
+Lihat absensi semua karyawan (real-time)
+Filter berdasarkan: tanggal, departemen, status
+Lihat detail absensi (foto, lokasi GPS, waktu)
+Koreksi absensi (edit waktu masuk/pulang)
+Hapus data absensi yang salah
+Input absensi manual (untuk karyawan yang lupa)
+Monitoring keterlambatan
+Validasi absensi mencurigakan
+Izin & Cuti
+
+Lihat semua pengajuan izin/cuti
+Approve/reject izin (sakit, pribadi, dll)
+Approve/reject cuti tahunan
+Set kuota cuti per karyawan
+Set kuota cuti per periode/tahun
+Adjust kuota cuti (tambah/kurang)
+Lihat history izin/cuti semua karyawan
+Monitoring sisa kuota cuti
+Export data izin/cuti
+Lembur
+
+Lihat semua pengajuan lembur
+Approve/reject lembur
+Edit data lembur
+Lihat history lembur semua karyawan
+Atur rate/tarif lembur per jam
+Perhitungan total jam dan biaya lembur
+Export data lembur untuk payroll
+Laporan
+
+Laporan Kehadiran
+
+Harian, mingguan, bulanan, tahunan
+Per karyawan atau per departemen
+Detail: hadir, izin, sakit, alpha, terlambat
+
+
+Laporan Keterlambatan
+
+Daftar karyawan yang sering terlambat
+Total menit/jam terlambat
+Frekuensi keterlambatan
+
+
+Laporan Izin & Cuti
+
+Rekap izin per jenis (sakit, pribadi)
+Rekap cuti yang sudah diambil
+Sisa kuota cuti karyawan
+
+
+Laporan Lembur
+
+Total jam lembur per karyawan
+Biaya lembur per departemen
+Breakdown lembur per periode
+
+
+Laporan Payroll
+
+Rekap untuk perhitungan gaji
+Data potongan (alpha, terlambat)
+Data lembur dan bonus kehadiran
+
+
+Export: Excel, PDF, CSV
+Pengaturan Sistem
+
+Jam Kerja
+
+Set jam masuk (default)
+Set jam pulang (default)
+Toleransi keterlambatan (menit)
+Batas waktu lembur
+
+
+Lokasi Kantor
+
+Set koordinat GPS kantor
+Set radius absensi (meter)
+Tambah lokasi kantor cabang
+
+
+Hari Libur
+
+Input hari libur nasional
+Input cuti bersama
+Atur hari kerja (Senin-Jumat/Sabtu)
+
+
+Shift Kerja
+
+Buat shift (pagi, siang, malam)
+Set jam kerja per shift
+Assign shift ke karyawan
+
+
+Departemen & Jabatan
+
+Tambah/edit departemen
+Tambah/edit jabatan
+
+
+Notifikasi
+
+Setting email notification
+Setting WhatsApp notification (jika ada integrasi)
+Reminder absen untuk karyawan
+
+
+Backup & Restore
+
+Backup database
+Restore data
+Export seluruh data sistem
+
+
+Audit Log
+
+Lihat riwayat aktivitas sistem
+Track perubahan data (siapa, kapan, apa)
+Monitoring login user
+Deteksi aktivitas mencurigakan
+2. Supervisor
+Akses: Manajemen dan monitoring timMenu & Fitur:Dashboard
+
+Overview kehadiran tim hari ini
+Statistik absensi tim (hadir, izin, sakit, alpha)
+Daftar anggota tim yang belum absen
+Pengajuan pending dari tim (butuh approval)
+Grafik performa kehadiran tim
+Total lembur tim bulan ini
+Alert keterlambatan tim
+Absensi Tim
+
+Lihat absensi semua anggota tim
+Lihat detail clock in/out (foto, GPS, waktu)
+Filter berdasarkan tanggal, status
+Monitoring keterlambatan anggota tim
+Request koreksi absensi ke Admin
+Catatan/notes pada absensi karyawan
+Download rekap absensi tim
+Izin & Cuti Tim
+
+Lihat pengajuan izin dari tim
+Approve/reject izin sakit (langsung)
+Approve/reject izin pribadi (langsung)
+Recommend cuti tahunan (diteruskan ke Admin untuk final approval)
+Lihat history izin/cuti anggota tim
+Lihat sisa kuota cuti anggota tim
+Monitoring pola izin/cuti tim
+Lembur Tim
+
+Lihat pengajuan lembur dari tim
+Approve/reject lembur (langsung)
+Buat rencana lembur untuk tim
+Lihat history lembur tim
+Monitoring total jam lembur tim
+Download rekap lembur tim
+Laporan Tim
+
+Laporan kehadiran tim (harian/bulanan)
+Laporan keterlambatan tim
+Laporan izin & cuti tim
+Laporan lembur tim
+Laporan produktivitas tim
+Export laporan tim (Excel/PDF)
+Perbandingan performa antar anggota tim
+Jadwal Tim
+
+Lihat jadwal shift anggota tim
+Request perubahan jadwal ke Admin
+Koordinasi shift antar anggota
+Lihat kalender kerja tim
+Komunikasi
+
+Broadcast pengumuman ke tim
+Reminder absen ke anggota tim
+Follow up keterlambatan
+Approval notification
+Absensi Pribadi
+
+Clock in/out (sama seperti staff)
+Pengajuan izin pribadi
+Pengajuan cuti pribadi
+Pengajuan lembur
+Lihat riwayat absensi pribadi
+Lihat sisa kuota cuti pribadi
+3. Staff
+Akses: Personal attendance managementMenu & Fitur:Dashboard
+
+Status absensi hari ini (sudah/belum absen)
+Jam masuk hari ini
+Countdown jam pulang
+Sisa kuota cuti tahun ini
+Status pengajuan pending
+Pengumuman dari perusahaan/supervisor
+Reminder: "Jangan lupa absen keluar"
+Info jadwal shift minggu ini
+Absensi
+
+Clock In (Masuk Kerja)
+
+Tombol "Absen Masuk"
+Ambil foto selfie (validasi wajah)
+Deteksi lokasi GPS otomatis
+Validasi: waktu, lokasi dalam radius
+Notifikasi berhasil/gagal
+Info: "Anda terlambat X menit" (jika terlambat)
+
+
+
+Clock Out (Pulang Kerja)
+
+Tombol "Absen Pulang"
+Ambil foto selfie
+Deteksi lokasi GPS otomatis
+Hitung total jam kerja hari ini
+Notifikasi berhasil/gagal
+
+
+
+Riwayat Absensi
+
+Lihat absensi 30 hari terakhir
+Detail per hari (foto, lokasi, waktu)
+Status: hadir, terlambat, izin, alpha
+Total jam kerja
+Filter berdasarkan bulan
+
+
+
+Download Slip Absensi
+
+Download slip bulanan (PDF)
+Rekap kehadiran untuk pribadi
+
+
+Izin
+
+Form Pengajuan Izin Sakit
+
+Pilih tanggal mulai - selesai
+Alasan/keterangan sakit
+Upload surat dokter (opsional/wajib)
+Submit ke Supervisor
+
+
+
+Form Pengajuan Izin Pribadi
+
+Pilih tanggal
+Alasan izin
+Submit ke Supervisor
+
+
+
+Status Pengajuan Izin
+
+Pending (menunggu approval)
+Approved (disetujui)
+Rejected (ditolak + alasan)
+
+
+
+History Izin
+
+Lihat semua izin yang pernah diajukan
+Total hari izin tahun ini
+
+
+Cuti
+
+Form Pengajuan Cuti
+
+Pilih tanggal mulai - selesai
+Hitung otomatis jumlah hari
+Jenis cuti (tahunan, khusus, dll)
+Alasan cuti
+Cek sisa kuota sebelum submit
+Submit ke Supervisor (→ diteruskan ke Admin)
+
+
+
+Sisa Kuota Cuti
+
+Total kuota cuti tahunan
+Cuti yang sudah diambil
+Sisa kuota cuti
+Info: "Kuota akan hangus di [tanggal]"
+
+
+
+Status Pengajuan Cuti
+
+Pending approval Supervisor
+Recommended (menunggu Admin)
+Approved
+Rejected + alasan
+
+
+
+History Cuti
+
+Lihat semua cuti yang pernah diambil
+Detail tanggal dan durasi
+
+
+Lembur
+
+Form Pengajuan Lembur
+
+Pilih tanggal lembur
+Jam mulai - jam selesai
+Keterangan pekerjaan lembur
+Submit ke Supervisor
+
+
+
+Status Pengajuan Lembur
+
+Pending
+Approved
+Rejected + alasan
+
+
+
+History Lembur
+
+Lihat semua lembur yang pernah dilakukan
+Total jam lembur bulan ini
+Total jam lembur tahun ini
+Estimasi upah lembur (jika ada)
+
+
+Jadwal Kerja
+
+Lihat jadwal shift pribadi
+Kalender kerja bulanan
+Info hari libur nasional/cuti bersama
+Info perubahan jadwal (jika ada)
+Notifikasi shift besok
+Profil
+
+Lihat data pribadi (nama, email, telepon, alamat)
+Lihat foto profil
+Edit foto profil
+Ubah password
+Update nomor telepon
+Update email
+Lihat departemen dan jabatan
+Pengaturan
+
+Pengaturan notifikasi
+
+Email notification (on/off)
+Push notification (on/off)
+Reminder absen (on/off)
+
+
+Ganti bahasa (Indonesia/English)
+FAQ/Bantuan
+Hubungi Admin/HR

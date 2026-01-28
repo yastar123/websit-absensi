@@ -35,15 +35,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const mainMenuItems = [
+// Menu items for all roles
+const staffMenuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Absensi", url: "/attendance", icon: Clock },
   { title: "Izin & Cuti", url: "/leave", icon: CalendarDays },
   { title: "Lembur", url: "/overtime", icon: Timer },
-  { title: "Laporan", url: "/reports", icon: FileBarChart },
 ];
 
+// Additional menu items for supervisor
+const supervisorMenuItems = [
+  { title: "Tim Saya", url: "/team", icon: Users },
+  { title: "Laporan Tim", url: "/reports", icon: FileBarChart },
+];
+
+// Additional menu items for admin
 const adminMenuItems = [
+  { title: "Laporan", url: "/reports", icon: FileBarChart },
   { title: "Karyawan", url: "/employees", icon: Users },
   { title: "Departemen", url: "/departments", icon: Building2 },
   { title: "Pengaturan", url: "/settings", icon: Settings },
@@ -88,7 +96,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => (
+              {staffMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -108,6 +116,35 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {currentUser?.role === 'supervisor' && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-2 py-2">
+              Supervisor
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {supervisorMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === item.url}
+                      tooltip={item.title}
+                    >
+                      <NavLink 
+                        to={item.url}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {currentUser?.role === 'admin' && (
           <SidebarGroup>

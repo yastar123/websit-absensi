@@ -148,10 +148,34 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Demo: <span className="font-medium text-foreground">admin@company.com</span>
-            </p>
+          <div className="space-y-2 text-center">
+            <p className="text-sm text-muted-foreground font-medium">Akun Demo:</p>
+            <div className="flex flex-col gap-1 text-sm">
+              <button
+                type="button"
+                onClick={() => { setEmail('admin@company.com'); setPassword('demo123'); }}
+                className="text-primary hover:underline"
+                data-testid="demo-admin"
+              >
+                Admin: admin@company.com
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('supervisor@company.com'); setPassword('demo123'); }}
+                className="text-primary hover:underline"
+                data-testid="demo-supervisor"
+              >
+                Supervisor: supervisor@company.com
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('staff@company.com'); setPassword('demo123'); }}
+                className="text-primary hover:underline"
+                data-testid="demo-staff"
+              >
+                Staff: staff@company.com
+              </button>
+            </div>
           </div>
         </div>
       </div>
