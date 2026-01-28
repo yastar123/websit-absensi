@@ -160,6 +160,51 @@ export const getShifts = async (): Promise<WorkShift[]> => {
   return res.json();
 };
 
+export const saveEmployee = async (employee: Employee): Promise<Employee> => {
+  const res = await fetch(`${API_URL}/employees`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(employee),
+  });
+  return res.json();
+};
+
+export const deleteEmployee = async (id: string): Promise<void> => {
+  await fetch(`${API_URL}/employees/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const saveDepartment = async (department: Department): Promise<Department> => {
+  const res = await fetch(`${API_URL}/departments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(department),
+  });
+  return res.json();
+};
+
+export const deleteDepartment = async (id: string): Promise<void> => {
+  await fetch(`${API_URL}/departments/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const saveShift = async (shift: WorkShift): Promise<WorkShift> => {
+  const res = await fetch(`${API_URL}/shifts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(shift),
+  });
+  return res.json();
+};
+
+export const deleteShift = async (id: string): Promise<void> => {
+  await fetch(`${API_URL}/shifts/${id}`, {
+    method: "DELETE",
+  });
+};
+
 // Current user operations
 export const getCurrentUser = (): Employee | null => {
   const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);

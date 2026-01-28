@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Building2, 
   Plus, 
@@ -43,7 +43,8 @@ import {
   saveShift,
   deleteShift,
   Department,
-  WorkShift
+  WorkShift,
+  Employee
 } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,22 +57,35 @@ export default function Departments() {
   const [shiftForm, setShiftForm] = useState({ name: "", startTime: "", endTime: "" });
   const { toast } = useToast();
 
-  const departments = getDepartments();
-  const shifts = getShifts();
-  const employees = getEmployees();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [shifts, setShifts] = useState<WorkShift[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [depts, shiftsData, emps] = await Promise.all([
+        getDepartments(),
+        getShifts(),
+        getEmployees()
+      ]);
+      setDepartments(depts);
+      setShifts(shiftsData);
+      setEmployees(emps);
+    };
+    loadData();
+  }, []);
 
   const getEmployeeCount = (deptName: string) => {
     return employees.filter(e => e.department === deptName).length;
   };
 
-  // Department handlers
-  const handleDeptSubmit = () => {
+  const handleDeptSubmit = async () => {
     if (!deptForm.name) {
       toast({ title: "Error", description: "Nama departemen wajib diisi", variant: "destructive" });
       return;
     }
 
-    saveDepartment({
+    await saveDepartment({
       id: editDept?.id || `dept-${Date.now()}`,
       name: deptForm.name,
       description: deptForm.description,
@@ -86,8 +100,8 @@ export default function Departments() {
     window.location.reload();
   };
 
-  const handleDeptDelete = (dept: Department) => {
-    deleteDepartment(dept.id);
+  const handleDeptDelete = async (dept: Department) => {
+    await deleteDepartment(dept.id);
     toast({ title: "Berhasil Dihapus", description: `Departemen ${dept.name} telah dihapus` });
     window.location.reload();
   };
@@ -104,14 +118,13 @@ export default function Departments() {
     setShowDeptModal(false);
   };
 
-  // Shift handlers
-  const handleShiftSubmit = () => {
+  const handleShiftSubmit = async () => {
     if (!shiftForm.name || !shiftForm.startTime || !shiftForm.endTime) {
       toast({ title: "Error", description: "Semua field wajib diisi", variant: "destructive" });
       return;
     }
 
-    saveShift({
+    await saveShift({
       id: editShift?.id || `shift-${Date.now()}`,
       name: shiftForm.name,
       startTime: shiftForm.startTime,
@@ -127,8 +140,8 @@ export default function Departments() {
     window.location.reload();
   };
 
-  const handleShiftDelete = (shift: WorkShift) => {
-    deleteShift(shift.id);
+  const handleShiftDelete = async (shift: WorkShift) => {
+    await deleteShift(shift.id);
     toast({ title: "Berhasil Dihapus", description: `Shift ${shift.name} telah dihapus` });
     window.location.reload();
   };
@@ -147,7 +160,6 @@ export default function Departments() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Departemen & Shift</h1>
         <p className="text-muted-foreground">Kelola departemen dan jadwal kerja</p>
@@ -165,7 +177,6 @@ export default function Departments() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Departments Tab */}
         <TabsContent value="departments" className="space-y-4">
           <div className="flex justify-end">
             <Button className="gradient-bg" onClick={() => setShowDeptModal(true)}>
@@ -219,7 +230,6 @@ export default function Departments() {
           </div>
         </TabsContent>
 
-        {/* Shifts Tab */}
         <TabsContent value="shifts" className="space-y-4">
           <div className="flex justify-end">
             <Button className="gradient-bg" onClick={() => setShowShiftModal(true)}>
@@ -277,7 +287,6 @@ export default function Departments() {
         </TabsContent>
       </Tabs>
 
-      {/* Department Modal */}
       <Dialog open={showDeptModal} onOpenChange={resetDeptForm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -314,7 +323,6 @@ export default function Departments() {
         </DialogContent>
       </Dialog>
 
-      {/* Shift Modal */}
       <Dialog open={showShiftModal} onOpenChange={resetShiftForm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

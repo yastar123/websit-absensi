@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Users, 
   Plus, 
@@ -43,7 +43,8 @@ import {
   getDepartments,
   saveEmployee,
   deleteEmployee,
-  Employee
+  Employee,
+  Department
 } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -64,8 +65,21 @@ export default function Employees() {
   });
   const { toast } = useToast();
 
-  const employees = getEmployees();
-  const departments = getDepartments();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [emps, depts] = await Promise.all([
+        getEmployees(),
+        getDepartments()
+      ]);
+      setEmployees(emps);
+      setDepartments(depts);
+    };
+    loadData();
+  }, []);
+
   const supervisors = employees.filter(e => e.role === 'supervisor');
 
   const filteredEmployees = employees.filter(emp => {
@@ -76,7 +90,7 @@ export default function Employees() {
     return matchesSearch && matchesDept && matchesRole;
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.department) {
       toast({
         title: "Error",
@@ -100,7 +114,7 @@ export default function Employees() {
       usedLeave: editEmployee?.usedLeave || 0,
     };
 
-    saveEmployee(newEmployee);
+    await saveEmployee(newEmployee);
     toast({
       title: editEmployee ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
       description: `Data karyawan ${formData.name} telah ${editEmployee ? 'diperbarui' : 'ditambahkan'}`,
@@ -110,8 +124,8 @@ export default function Employees() {
     window.location.reload();
   };
 
-  const handleDelete = (emp: Employee) => {
-    deleteEmployee(emp.id);
+  const handleDelete = async (emp: Employee) => {
+    await deleteEmployee(emp.id);
     toast({
       title: "Berhasil Dihapus",
       description: `Karyawan ${emp.name} telah dihapus dari sistem`,
