@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   FileBarChart, 
   Download, 
@@ -29,7 +29,10 @@ import {
 import { 
   getEmployees, 
   getAttendanceRecords,
-  getDepartments
+  getDepartments,
+  Employee,
+  AttendanceRecord,
+  Department
 } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
@@ -37,20 +40,31 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function Reports() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth().toString());
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [allRecords, setAllRecords] = useState<AttendanceRecord[]>([]);
   const { toast } = useToast();
   
-  const employees = getEmployees();
-  const departments = getDepartments();
-  const allRecords = getAttendanceRecords();
+  useEffect(() => {
+    const fetchData = async () => {
+      const [emps, depts, records] = await Promise.all([
+        getEmployees(),
+        getDepartments(),
+        getAttendanceRecords()
+      ]);
+      setEmployees(emps);
+      setDepartments(depts);
+      setAllRecords(records);
+    };
+    fetchData();
+  }, []);
 
-  // Filter records by month
   const currentYear = new Date().getFullYear();
   const filteredRecords = allRecords.filter(r => {
     const date = new Date(r.date);
     return date.getMonth() === parseInt(selectedMonth) && date.getFullYear() === currentYear;
   });
 
-  // Calculate employee stats
   const employeeStats = employees
     .filter(e => selectedDepartment === 'all' || e.department === selectedDepartment)
     .map(emp => {
@@ -71,7 +85,6 @@ export default function Reports() {
       };
     });
 
-  // Chart data
   const dailyData = Array.from({ length: 30 }, (_, i) => {
     const day = i + 1;
     const dayRecords = filteredRecords.filter(r => {
@@ -108,7 +121,6 @@ export default function Reports() {
     { value: '11', label: 'Desember' },
   ];
 
-  // Summary stats
   const totalPresent = employeeStats.reduce((sum, e) => sum + e.present, 0);
   const totalLate = employeeStats.reduce((sum, e) => sum + e.late, 0);
   const totalAbsent = employeeStats.reduce((sum, e) => sum + e.absent, 0);

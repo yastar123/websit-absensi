@@ -39,15 +39,28 @@ export default function Attendance() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
   const currentUser = getCurrentUser();
-  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
-  const attendanceHistory = currentUser ? getEmployeeAttendance(currentUser.id).slice(0, 10) : [];
   const { toast } = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      const [today, history] = await Promise.all([
+        getTodayAttendance(currentUser.id),
+        getEmployeeAttendance(currentUser.id)
+      ]);
+      setTodayAttendance(today || null);
+      setAttendanceHistory(history.slice(0, 10));
+    };
+    fetchData();
+  }, [currentUser]);
 
   const handleClockIn = async () => {
     if (!currentUser) return;
@@ -67,7 +80,7 @@ export default function Attendance() {
       status: isLate ? 'late' : 'present',
     };
 
-    saveAttendance(record);
+    await saveAttendance(record);
     setIsProcessing(false);
     toast({
       title: "Clock In Berhasil",
@@ -90,7 +103,7 @@ export default function Attendance() {
       clockOut: timeStr,
     };
 
-    saveAttendance(record);
+    await saveAttendance(record);
     setIsProcessing(false);
     toast({
       title: "Clock Out Berhasil",
@@ -178,7 +191,7 @@ export default function Attendance() {
                 ) : !todayAttendance?.clockOut ? (
                   <Button 
                     size="lg" 
-                    variant="outline"
+                    variant="outline" 
                     className="h-14 px-8 border-destructive text-destructive hover:bg-destructive/10"
                     onClick={handleClockOut}
                     disabled={isProcessing}

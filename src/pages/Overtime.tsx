@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Timer, 
   Plus, 
@@ -45,19 +45,27 @@ export default function Overtime() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
+  const [overtimeRequests, setOvertimeRequests] = useState<OvertimeRequest[]>([]);
   const currentUser = getCurrentUser();
-  const overtimeRequests = currentUser ? getEmployeeOvertimeRequests(currentUser.id) : [];
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      const requests = await getEmployeeOvertimeRequests(currentUser.id);
+      setOvertimeRequests(requests);
+    };
+    fetchData();
+  }, [currentUser]);
 
   const pendingRequests = overtimeRequests.filter(r => r.status === 'pending').length;
   const approvedRequests = overtimeRequests.filter(r => r.status === 'approved');
   
-  // Calculate total approved overtime hours
   const totalOvertimeHours = approvedRequests.reduce((total, req) => {
     return total + calculateHours(req.startTime, req.endTime);
   }, 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!currentUser || !date || !startTime || !endTime || !reason) {
       toast({
         title: "Error",
@@ -78,7 +86,7 @@ export default function Overtime() {
       createdAt: new Date().toISOString(),
     };
 
-    saveOvertimeRequest(newRequest);
+    await saveOvertimeRequest(newRequest);
     toast({
       title: "Pengajuan Berhasil",
       description: "Pengajuan lembur Anda telah dikirim untuk persetujuan",

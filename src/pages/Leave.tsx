@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Calendar, 
   Plus, 
@@ -53,9 +53,18 @@ export default function Leave() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const currentUser = getCurrentUser();
-  const leaveRequests = currentUser ? getEmployeeLeaveRequests(currentUser.id) : [];
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      const requests = await getEmployeeLeaveRequests(currentUser.id);
+      setLeaveRequests(requests);
+    };
+    fetchData();
+  }, [currentUser]);
 
   const leaveQuota = currentUser?.leaveQuota || 12;
   const usedLeave = currentUser?.usedLeave || 0;
@@ -65,7 +74,7 @@ export default function Leave() {
   const pendingRequests = leaveRequests.filter(r => r.status === 'pending').length;
   const approvedRequests = leaveRequests.filter(r => r.status === 'approved').length;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!currentUser || !leaveType || !startDate || !endDate || !reason) {
       toast({
         title: "Error",
@@ -86,7 +95,7 @@ export default function Leave() {
       createdAt: new Date().toISOString(),
     };
 
-    saveLeaveRequest(newRequest);
+    await saveLeaveRequest(newRequest);
     toast({
       title: "Pengajuan Berhasil",
       description: "Pengajuan izin/cuti Anda telah dikirim untuk persetujuan",

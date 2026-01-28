@@ -32,7 +32,10 @@ import {
   getEmployeeLeaveRequests,
   getEmployeeOvertimeRequests,
   saveAttendance,
-  AttendanceRecord
+  AttendanceRecord,
+  Employee,
+  LeaveRequest,
+  OvertimeRequest
 } from "@/lib/storage";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useToast } from "@/hooks/use-toast";
@@ -75,12 +78,30 @@ function StatCard({ title, value, change, changeType, icon, iconBg }: StatCardPr
 }
 
 function AdminDashboard() {
-  const employees = getEmployees();
-  const today = new Date();
-  const monthlyStats = getMonthlyStats(today.getMonth(), today.getFullYear());
-  const departmentStats = getDepartmentStats();
-  const pendingLeave = getLeaveRequests().filter(l => l.status === 'pending');
-  const pendingOvertime = getOvertimeRequests().filter(o => o.status === 'pending');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<any>(null);
+  const [departmentStats, setDepartmentStats] = useState<any[]>([]);
+  const [pendingLeave, setPendingLeave] = useState<LeaveRequest[]>([]);
+  const [pendingOvertime, setPendingOvertime] = useState<OvertimeRequest[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const today = new Date();
+      const [emps, mStats, dStats, lReqs, oReqs] = await Promise.all([
+        getEmployees(),
+        getMonthlyStats(today.getMonth(), today.getFullYear()),
+        getDepartmentStats(),
+        getLeaveRequests(),
+        getOvertimeRequests()
+      ]);
+      setEmployees(emps);
+      setMonthlyStats(mStats);
+      setDepartmentStats(dStats);
+      setPendingLeave(lReqs.filter(l => l.status === 'pending'));
+      setPendingOvertime(oReqs.filter(o => o.status === 'pending'));
+    };
+    fetchData();
+  }, []);
 
   const weeklyData = [
     { name: 'Sen', hadir: 45, terlambat: 3, izin: 2 },
@@ -97,6 +118,8 @@ function AdminDashboard() {
   }));
 
   const COLORS = ['#0070F3', '#7928CA', '#FF0080', '#F5A623'];
+
+  if (!monthlyStats) return null;
 
   return (
     <>
@@ -234,10 +257,27 @@ function AdminDashboard() {
 function SupervisorDashboard() {
   const currentUser = getCurrentUser();
   const navigate = useNavigate();
-  const teamMembers = currentUser ? getTeamMembers(currentUser.id) : [];
-  const pendingLeave = currentUser ? getTeamLeaveRequests(currentUser.id).filter(l => l.status === 'pending') : [];
-  const pendingOvertime = currentUser ? getTeamOvertimeRequests(currentUser.id).filter(o => o.status === 'pending') : [];
-  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
+  const [teamMembers, setTeamMembers] = useState<Employee[]>([]);
+  const [pendingLeave, setPendingLeave] = useState<LeaveRequest[]>([]);
+  const [pendingOvertime, setPendingOvertime] = useState<OvertimeRequest[]>([]);
+  const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      const [members, lReqs, oReqs, tAtt] = await Promise.all([
+        getTeamMembers(currentUser.id),
+        getTeamLeaveRequests(currentUser.id),
+        getTeamOvertimeRequests(currentUser.id),
+        getTodayAttendance(currentUser.id)
+      ]);
+      setTeamMembers(members);
+      setPendingLeave(lReqs.filter(l => l.status === 'pending'));
+      setPendingOvertime(oReqs.filter(o => o.status === 'pending'));
+      setTodayAttendance(tAtt || null);
+    };
+    fetchData();
+  }, [currentUser]);
 
   return (
     <>
@@ -358,10 +398,25 @@ function StaffDashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
-  const pendingLeave = currentUser ? getEmployeeLeaveRequests(currentUser.id).filter(l => l.status === 'pending') : [];
-  const pendingOvertime = currentUser ? getEmployeeOvertimeRequests(currentUser.id).filter(o => o.status === 'pending') : [];
+  const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
+  const [pendingLeave, setPendingLeave] = useState<LeaveRequest[]>([]);
+  const [pendingOvertime, setPendingOvertime] = useState<OvertimeRequest[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      const [tAtt, lReqs, oReqs] = await Promise.all([
+        getTodayAttendance(currentUser.id),
+        getEmployeeLeaveRequests(currentUser.id),
+        getEmployeeOvertimeRequests(currentUser.id)
+      ]);
+      setTodayAttendance(tAtt || null);
+      setPendingLeave(lReqs.filter(l => l.status === 'pending'));
+      setPendingOvertime(oReqs.filter(o => o.status === 'pending'));
+    };
+    fetchData();
+  }, [currentUser]);
 
   const leaveQuota = currentUser?.leaveQuota || 12;
   const usedLeave = currentUser?.usedLeave || 0;
@@ -384,7 +439,7 @@ function StaffDashboard() {
       status: isLate ? 'late' : 'present',
     };
 
-    saveAttendance(record);
+    await saveAttendance(record);
     setIsProcessing(false);
     toast({
       title: "Clock In Berhasil",
@@ -406,7 +461,7 @@ function StaffDashboard() {
       clockOut: timeStr,
     };
 
-    saveAttendance(record);
+    await saveAttendance(record);
     setIsProcessing(false);
     toast({
       title: "Clock Out Berhasil",
@@ -580,7 +635,7 @@ function StaffDashboard() {
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Ajukan Lembur</p>
-                  <p className="text-sm text-muted-foreground">Buat pengajuan lembur</p>
+                  <p className="text-sm text-muted-foreground">Buat pengajuan baru</p>
                 </div>
               </div>
               <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
@@ -593,50 +648,15 @@ function StaffDashboard() {
 }
 
 export default function Dashboard() {
-  const [currentTime, setCurrentTime] = useState(new Date());
   const currentUser = getCurrentUser();
-  const today = new Date();
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <Badge className="bg-primary/10 text-primary">Admin</Badge>;
-      case 'supervisor':
-        return <Badge className="bg-blue-500/10 text-blue-500">Supervisor</Badge>;
-      case 'staff':
-        return <Badge className="bg-muted text-muted-foreground">Staff</Badge>;
-      default:
-        return <Badge variant="outline">{role}</Badge>;
-    }
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">
-              Selamat datang, {currentUser?.name?.split(' ')[0]}!
-            </h1>
-            {currentUser && getRoleBadge(currentUser.role)}
-          </div>
-          <p className="text-muted-foreground">
-            {today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-3xl font-bold text-foreground font-mono">
-              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </p>
-            <p className="text-sm text-muted-foreground">Waktu Server</p>
-          </div>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Selamat datang kembali, {currentUser?.name || 'User'}
+        </p>
       </div>
 
       {currentUser?.role === 'admin' && <AdminDashboard />}

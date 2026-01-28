@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, UserCheck, Clock, CalendarDays, Timer, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,8 @@ import {
   saveOvertimeRequest,
   Employee,
   LeaveRequest,
-  OvertimeRequest
+  OvertimeRequest,
+  AttendanceRecord
 } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,7 +32,29 @@ export default function Team() {
   const { toast } = useToast();
   const currentUser = getCurrentUser();
   const [activeTab, setActiveTab] = useState("members");
+  const [teamMembers, setTeamMembers] = useState<Employee[]>([]);
+  const [teamAttendance, setTeamAttendance] = useState<AttendanceRecord[]>([]);
+  const [pendingLeave, setPendingLeave] = useState<LeaveRequest[]>([]);
+  const [pendingOvertime, setPendingOvertime] = useState<OvertimeRequest[]>([]);
   
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'supervisor') return;
+    const fetchData = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const [members, attendance, leaves, overtimes] = await Promise.all([
+        getTeamMembers(currentUser.id),
+        getTeamAttendance(currentUser.id),
+        getTeamLeaveRequests(currentUser.id),
+        getTeamOvertimeRequests(currentUser.id)
+      ]);
+      setTeamMembers(members);
+      setTeamAttendance(attendance.filter(a => a.date === today));
+      setPendingLeave(leaves.filter(l => l.status === 'pending'));
+      setPendingOvertime(overtimes.filter(o => o.status === 'pending'));
+    };
+    fetchData();
+  }, [currentUser]);
+
   if (!currentUser || currentUser.role !== 'supervisor') {
     return (
       <div className="flex items-center justify-center h-full">
@@ -39,12 +62,6 @@ export default function Team() {
       </div>
     );
   }
-
-  const teamMembers = getTeamMembers(currentUser.id);
-  const today = new Date().toISOString().split('T')[0];
-  const teamAttendance = getTeamAttendance(currentUser.id).filter(a => a.date === today);
-  const pendingLeave = getTeamLeaveRequests(currentUser.id).filter(l => l.status === 'pending');
-  const pendingOvertime = getTeamOvertimeRequests(currentUser.id).filter(o => o.status === 'pending');
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -54,8 +71,8 @@ export default function Team() {
     return teamAttendance.find(a => a.employeeId === memberId);
   };
 
-  const handleLeaveApproval = (request: LeaveRequest, approved: boolean) => {
-    saveLeaveRequest({
+  const handleLeaveApproval = async (request: LeaveRequest, approved: boolean) => {
+    await saveLeaveRequest({
       ...request,
       status: approved ? 'approved' : 'rejected',
       approvedBy: currentUser.id
@@ -64,10 +81,11 @@ export default function Team() {
       title: approved ? "Izin Disetujui" : "Izin Ditolak",
       description: `Pengajuan izin telah ${approved ? 'disetujui' : 'ditolak'}.`,
     });
+    window.location.reload();
   };
 
-  const handleOvertimeApproval = (request: OvertimeRequest, approved: boolean) => {
-    saveOvertimeRequest({
+  const handleOvertimeApproval = async (request: OvertimeRequest, approved: boolean) => {
+    await saveOvertimeRequest({
       ...request,
       status: approved ? 'approved' : 'rejected',
       approvedBy: currentUser.id
@@ -76,6 +94,7 @@ export default function Team() {
       title: approved ? "Lembur Disetujui" : "Lembur Ditolak",
       description: `Pengajuan lembur telah ${approved ? 'disetujui' : 'ditolak'}.`,
     });
+    window.location.reload();
   };
 
   const getMemberName = (employeeId: string) => {
@@ -172,7 +191,6 @@ export default function Team() {
                     <TableHead>Posisi</TableHead>
                     <TableHead>Status Hari Ini</TableHead>
                     <TableHead>Clock In</TableHead>
-                    <TableHead>Sisa Cuti</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -208,13 +226,12 @@ export default function Team() {
                           </Badge>
                         </TableCell>
                         <TableCell>{attendance?.clockIn || '-'}</TableCell>
-                        <TableCell>{member.leaveQuota - member.usedLeave} hari</TableCell>
                       </TableRow>
                     );
                   })}
                   {teamMembers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                         Belum ada anggota tim
                       </TableCell>
                     </TableRow>
