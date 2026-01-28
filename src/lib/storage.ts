@@ -160,15 +160,14 @@ export const getShifts = async (): Promise<WorkShift[]> => {
   return res.json();
 };
 
+// Current user operations
 export const getCurrentUser = (): Employee | null => {
   const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
   return data ? JSON.parse(data) : null;
 };
-
 export const setCurrentUser = (user: Employee): void => {
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
 };
-
 export const logout = (): void => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
 };
@@ -223,65 +222,6 @@ export const getDepartmentStats = async () => {
   const today = new Date().toISOString().split('T')[0];
   const allRecords = await getAttendanceRecords();
   const records = allRecords.filter(r => r.date === today);
-
-  return departments.map(dept => {
-    const deptEmployees = employees.filter(e => e.department === dept.name);
-    const presentCount = records.filter(r => 
-      deptEmployees.some(e => e.id === r.employeeId) && 
-      (r.status === 'present' || r.status === 'late')
-    ).length;
-
-    return {
-      department: dept.name,
-      total: deptEmployees.length,
-      present: presentCount,
-      absent: deptEmployees.length - presentCount,
-    };
-  });
-};
-
-export const getTeamAttendance = (supervisorId: string): AttendanceRecord[] => {
-  const teamMembers = getTeamMembers(supervisorId);
-  const teamIds = teamMembers.map(m => m.id);
-  return getAttendanceRecords().filter(a => teamIds.includes(a.employeeId));
-};
-
-export const getTeamLeaveRequests = (supervisorId: string): LeaveRequest[] => {
-  const teamMembers = getTeamMembers(supervisorId);
-  const teamIds = teamMembers.map(m => m.id);
-  return getLeaveRequests().filter(l => teamIds.includes(l.employeeId));
-};
-
-export const getTeamOvertimeRequests = (supervisorId: string): OvertimeRequest[] => {
-  const teamMembers = getTeamMembers(supervisorId);
-  const teamIds = teamMembers.map(m => m.id);
-  return getOvertimeRequests().filter(o => teamIds.includes(o.employeeId));
-};
-
-// Statistics helpers
-export const getMonthlyStats = (month: number, year: number) => {
-  const records = getAttendanceRecords();
-  const employees = getEmployees();
-  
-  const monthRecords = records.filter(r => {
-    const date = new Date(r.date);
-    return date.getMonth() === month && date.getFullYear() === year;
-  });
-
-  return {
-    totalPresent: monthRecords.filter(r => r.status === 'present').length,
-    totalLate: monthRecords.filter(r => r.status === 'late').length,
-    totalAbsent: monthRecords.filter(r => r.status === 'absent').length,
-    totalLeave: monthRecords.filter(r => r.status === 'leave' || r.status === 'sick').length,
-    totalEmployees: employees.length,
-  };
-};
-
-export const getDepartmentStats = () => {
-  const employees = getEmployees();
-  const departments = getDepartments();
-  const today = new Date().toISOString().split('T')[0];
-  const records = getAttendanceRecords().filter(r => r.date === today);
 
   return departments.map(dept => {
     const deptEmployees = employees.filter(e => e.department === dept.name);
