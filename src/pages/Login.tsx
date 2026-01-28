@@ -21,20 +21,17 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const employees = getEmployees();
-    const user = employees.find(emp => emp.email === email);
-
-    if (user) {
-      setCurrentUser(user);
-      toast({
-        title: "Login berhasil",
-        description: `Selamat datang, ${user.name}!`,
-      });
-      navigate("/");
-    } else {
+    try {
+      const user = await login(email);
+      if (user) {
+        setCurrentUser(user);
+        toast({
+          title: "Login berhasil",
+          description: `Selamat datang, ${user.name}!`,
+        });
+        navigate("/");
+      }
+    } catch (error) {
       toast({
         title: "Login gagal",
         description: "Email tidak ditemukan. Coba: admin@company.com",

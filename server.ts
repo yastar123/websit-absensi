@@ -113,6 +113,59 @@ app.post("/api/overtime", async (req, res) => {
   }
 });
 
+// Auth
+app.post("/api/login", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await db.query.employees.findFirst({
+      where: eq(schema.employees.email, email)
+    });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(401).json({ error: "Email not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Reports
+app.get("/api/reports/stats", async (req, res) => {
+  const { month, department } = req.query;
+  try {
+    const employees = await db.query.employees.findMany();
+    const attendance = await db.query.attendance.findMany();
+    res.json({ employees, attendance });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch report stats" });
+  }
+});
+
+// Settings
+app.get("/api/settings", async (req, res) => {
+  res.json({
+    companyName: "PT. AbsensiPro Indonesia",
+    workStartTime: "09:00",
+    workEndTime: "18:00",
+    lateThreshold: 15,
+  });
+});
+
+// Shifts
+app.get("/api/shifts", async (req, res) => {
+  try {
+    // Basic mock for now, can be table later
+    res.json([
+      { id: 'shift-1', name: 'Regular', startTime: '09:00', endTime: '18:00' },
+      { id: 'shift-2', name: 'Early', startTime: '07:00', endTime: '16:00' },
+      { id: 'shift-3', name: 'Late', startTime: '14:00', endTime: '23:00' },
+    ]);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch shifts" });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);

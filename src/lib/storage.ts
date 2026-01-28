@@ -220,123 +220,61 @@ export const initializeDefaultData = () => {
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(defaultEmployees[0]));
 };
 
-// Generic storage helpers
-const getItems = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
+const API_URL = "/api";
+
+export const getEmployees = async (): Promise<Employee[]> => {
+  const res = await fetch(`${API_URL}/employees`);
+  return res.json();
 };
 
-const setItems = <T>(key: string, items: T[]): void => {
-  localStorage.setItem(key, JSON.stringify(items));
+export const getAttendanceRecords = async (): Promise<AttendanceRecord[]> => {
+  const res = await fetch(`${API_URL}/attendance`);
+  return res.json();
 };
 
-// Employee operations
-export const getEmployees = (): Employee[] => getItems<Employee>(STORAGE_KEYS.EMPLOYEES);
-export const getEmployee = (id: string): Employee | undefined => 
-  getEmployees().find(e => e.id === id);
-export const saveEmployee = (employee: Employee): void => {
-  const employees = getEmployees();
-  const index = employees.findIndex(e => e.id === employee.id);
-  if (index >= 0) {
-    employees[index] = employee;
-  } else {
-    employees.push(employee);
-  }
-  setItems(STORAGE_KEYS.EMPLOYEES, employees);
-};
-export const deleteEmployee = (id: string): void => {
-  const employees = getEmployees().filter(e => e.id !== id);
-  setItems(STORAGE_KEYS.EMPLOYEES, employees);
+export const getDepartments = async (): Promise<Department[]> => {
+  const res = await fetch(`${API_URL}/departments`);
+  return res.json();
 };
 
-// Attendance operations
-export const getAttendanceRecords = (): AttendanceRecord[] => 
-  getItems<AttendanceRecord>(STORAGE_KEYS.ATTENDANCE);
-export const getEmployeeAttendance = (employeeId: string): AttendanceRecord[] =>
-  getAttendanceRecords().filter(a => a.employeeId === employeeId);
-export const getTodayAttendance = (employeeId: string): AttendanceRecord | undefined => {
-  const today = new Date().toISOString().split('T')[0];
-  return getAttendanceRecords().find(a => a.employeeId === employeeId && a.date === today);
-};
-export const saveAttendance = (record: AttendanceRecord): void => {
-  const records = getAttendanceRecords();
-  const index = records.findIndex(r => r.id === record.id);
-  if (index >= 0) {
-    records[index] = record;
-  } else {
-    records.push(record);
-  }
-  setItems(STORAGE_KEYS.ATTENDANCE, records);
+export const login = async (email: string): Promise<Employee> => {
+  const res = await fetch(`${API_URL}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) throw new Error("Login failed");
+  return res.json();
 };
 
-// Leave request operations
-export const getLeaveRequests = (): LeaveRequest[] => 
-  getItems<LeaveRequest>(STORAGE_KEYS.LEAVE_REQUESTS);
-export const getEmployeeLeaveRequests = (employeeId: string): LeaveRequest[] =>
-  getLeaveRequests().filter(l => l.employeeId === employeeId);
-export const saveLeaveRequest = (request: LeaveRequest): void => {
-  const requests = getLeaveRequests();
-  const index = requests.findIndex(r => r.id === request.id);
-  if (index >= 0) {
-    requests[index] = request;
-  } else {
-    requests.push(request);
-  }
-  setItems(STORAGE_KEYS.LEAVE_REQUESTS, requests);
+export const saveAttendance = async (record: AttendanceRecord): Promise<AttendanceRecord> => {
+  const res = await fetch(`${API_URL}/attendance`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record),
+  });
+  return res.json();
 };
 
-// Overtime request operations
-export const getOvertimeRequests = (): OvertimeRequest[] => 
-  getItems<OvertimeRequest>(STORAGE_KEYS.OVERTIME_REQUESTS);
-export const getEmployeeOvertimeRequests = (employeeId: string): OvertimeRequest[] =>
-  getOvertimeRequests().filter(o => o.employeeId === employeeId);
-export const saveOvertimeRequest = (request: OvertimeRequest): void => {
-  const requests = getOvertimeRequests();
-  const index = requests.findIndex(r => r.id === request.id);
-  if (index >= 0) {
-    requests[index] = request;
-  } else {
-    requests.push(request);
-  }
-  setItems(STORAGE_KEYS.OVERTIME_REQUESTS, requests);
+export const saveLeaveRequest = async (request: LeaveRequest): Promise<LeaveRequest> => {
+  const res = await fetch(`${API_URL}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  return res.json();
 };
 
-// Department operations
-export const getDepartments = (): Department[] => 
-  getItems<Department>(STORAGE_KEYS.DEPARTMENTS);
-export const saveDepartment = (dept: Department): void => {
-  const depts = getDepartments();
-  const index = depts.findIndex(d => d.id === dept.id);
-  if (index >= 0) {
-    depts[index] = dept;
-  } else {
-    depts.push(dept);
-  }
-  setItems(STORAGE_KEYS.DEPARTMENTS, depts);
-};
-export const deleteDepartment = (id: string): void => {
-  const depts = getDepartments().filter(d => d.id !== id);
-  setItems(STORAGE_KEYS.DEPARTMENTS, depts);
+export const saveOvertimeRequest = async (request: OvertimeRequest): Promise<OvertimeRequest> => {
+  const res = await fetch(`${API_URL}/overtime`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  return res.json();
 };
 
-// Shift operations
-export const getShifts = (): WorkShift[] => getItems<WorkShift>(STORAGE_KEYS.SHIFTS);
-export const saveShift = (shift: WorkShift): void => {
-  const shifts = getShifts();
-  const index = shifts.findIndex(s => s.id === shift.id);
-  if (index >= 0) {
-    shifts[index] = shift;
-  } else {
-    shifts.push(shift);
-  }
-  setItems(STORAGE_KEYS.SHIFTS, shifts);
-};
-export const deleteShift = (id: string): void => {
-  const shifts = getShifts().filter(s => s.id !== id);
-  setItems(STORAGE_KEYS.SHIFTS, shifts);
-};
-
-// Current user operations
+// ... keep existing types and export as needed for components
 export const getCurrentUser = (): Employee | null => {
   const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
   return data ? JSON.parse(data) : null;
@@ -348,9 +286,107 @@ export const logout = (): void => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
 };
 
-// Team helpers for supervisors
-export const getTeamMembers = (supervisorId: string): Employee[] => {
-  return getEmployees().filter(e => e.supervisorId === supervisorId);
+export const getEmployeeAttendance = async (employeeId: string): Promise<AttendanceRecord[]> => {
+  const records = await getAttendanceRecords();
+  return records.filter(a => a.employeeId === employeeId);
+};
+
+export const getTodayAttendance = async (employeeId: string): Promise<AttendanceRecord | undefined> => {
+  const today = new Date().toISOString().split('T')[0];
+  const records = await getAttendanceRecords();
+  return records.find(a => a.employeeId === employeeId && a.date === today);
+};
+
+export const getLeaveRequests = async (): Promise<LeaveRequest[]> => {
+  const res = await fetch(`${API_URL}/leave`);
+  return res.json();
+};
+
+export const getOvertimeRequests = async (): Promise<OvertimeRequest[]> => {
+  const res = await fetch(`${API_URL}/overtime`);
+  return res.json();
+};
+
+export const getEmployeeLeaveRequests = async (employeeId: string): Promise<LeaveRequest[]> => {
+  const requests = await getLeaveRequests();
+  return requests.filter(l => l.employeeId === employeeId);
+};
+
+export const getEmployeeOvertimeRequests = async (employeeId: string): Promise<OvertimeRequest[]> => {
+  const requests = await getOvertimeRequests();
+  return requests.filter(o => o.employeeId === employeeId);
+};
+
+export const getShifts = async (): Promise<WorkShift[]> => {
+  const res = await fetch(`${API_URL}/shifts`);
+  return res.json();
+};
+
+export const getTeamMembers = async (supervisorId: string): Promise<Employee[]> => {
+  const employees = await getEmployees();
+  return employees.filter(e => e.supervisorId === supervisorId);
+};
+
+export const getTeamAttendance = async (supervisorId: string): Promise<AttendanceRecord[]> => {
+  const teamMembers = await getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  const records = await getAttendanceRecords();
+  return records.filter(a => teamIds.includes(a.employeeId));
+};
+
+export const getTeamLeaveRequests = async (supervisorId: string): Promise<LeaveRequest[]> => {
+  const teamMembers = await getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  const requests = await getLeaveRequests();
+  return requests.filter(l => teamIds.includes(l.employeeId));
+};
+
+export const getTeamOvertimeRequests = async (supervisorId: string): Promise<OvertimeRequest[]> => {
+  const teamMembers = await getTeamMembers(supervisorId);
+  const teamIds = teamMembers.map(m => m.id);
+  const requests = await getOvertimeRequests();
+  return requests.filter(o => teamIds.includes(o.employeeId));
+};
+
+export const getMonthlyStats = async (month: number, year: number) => {
+  const records = await getAttendanceRecords();
+  const employees = await getEmployees();
+  
+  const monthRecords = records.filter(r => {
+    const date = new Date(r.date);
+    return date.getMonth() === month && date.getFullYear() === year;
+  });
+
+  return {
+    totalPresent: monthRecords.filter(r => r.status === 'present').length,
+    totalLate: monthRecords.filter(r => r.status === 'late').length,
+    totalAbsent: monthRecords.filter(r => r.status === 'absent').length,
+    totalLeave: monthRecords.filter(r => r.status === 'leave' || r.status === 'sick').length,
+    totalEmployees: employees.length,
+  };
+};
+
+export const getDepartmentStats = async () => {
+  const employees = await getEmployees();
+  const departments = await getDepartments();
+  const today = new Date().toISOString().split('T')[0];
+  const allRecords = await getAttendanceRecords();
+  const records = allRecords.filter(r => r.date === today);
+
+  return departments.map(dept => {
+    const deptEmployees = employees.filter(e => e.department === dept.name);
+    const presentCount = records.filter(r => 
+      deptEmployees.some(e => e.id === r.employeeId) && 
+      (r.status === 'present' || r.status === 'late')
+    ).length;
+
+    return {
+      department: dept.name,
+      total: deptEmployees.length,
+      present: presentCount,
+      absent: deptEmployees.length - presentCount,
+    };
+  });
 };
 
 export const getTeamAttendance = (supervisorId: string): AttendanceRecord[] => {
