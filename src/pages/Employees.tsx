@@ -8,9 +8,10 @@ import {
   Phone,
   Building2,
   Trash2,
-  Edit
+  Edit,
+  UserCog
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Employees() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedRole, setSelectedRole] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
@@ -57,18 +59,21 @@ export default function Employees() {
     phone: "",
     department: "",
     position: "",
-    role: "employee" as 'admin' | 'employee',
+    role: "staff" as 'admin' | 'supervisor' | 'staff',
+    supervisorId: "",
   });
   const { toast } = useToast();
 
   const employees = getEmployees();
   const departments = getDepartments();
+  const supervisors = employees.filter(e => e.role === 'supervisor');
 
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          emp.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDept = selectedDepartment === 'all' || emp.department === selectedDepartment;
-    return matchesSearch && matchesDept;
+    const matchesRole = selectedRole === 'all' || emp.role === selectedRole;
+    return matchesSearch && matchesDept && matchesRole;
   });
 
   const handleSubmit = () => {
@@ -83,7 +88,13 @@ export default function Employees() {
 
     const newEmployee: Employee = {
       id: editEmployee?.id || `emp-${Date.now()}`,
-      ...formData,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      department: formData.department,
+      position: formData.position,
+      role: formData.role,
+      supervisorId: formData.role === 'staff' ? formData.supervisorId : undefined,
       joinDate: editEmployee?.joinDate || new Date().toISOString().split('T')[0],
       leaveQuota: 12,
       usedLeave: editEmployee?.usedLeave || 0,
@@ -117,6 +128,7 @@ export default function Employees() {
       department: emp.department,
       position: emp.position,
       role: emp.role,
+      supervisorId: emp.supervisorId || "",
     });
     setShowAddModal(true);
   };
@@ -128,7 +140,8 @@ export default function Employees() {
       phone: "",
       department: "",
       position: "",
-      role: "employee",
+      role: "staff",
+      supervisorId: "",
     });
     setEditEmployee(null);
     setShowAddModal(false);
@@ -138,21 +151,38 @@ export default function Employees() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge className="bg-primary/10 text-primary">Admin</Badge>;
+      case 'supervisor':
+        return <Badge className="bg-blue-500/10 text-blue-500">Supervisor</Badge>;
+      case 'staff':
+        return <Badge className="bg-muted text-muted-foreground">Staff</Badge>;
+      default:
+        return <Badge variant="outline">{role}</Badge>;
+    }
+  };
+
+  const getSupervisorName = (supervisorId?: string) => {
+    if (!supervisorId) return null;
+    const supervisor = employees.find(e => e.id === supervisorId);
+    return supervisor?.name;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Manajemen Karyawan</h1>
           <p className="text-muted-foreground">Kelola data karyawan perusahaan</p>
         </div>
-        <Button className="gradient-bg" onClick={() => setShowAddModal(true)}>
+        <Button className="gradient-bg" onClick={() => setShowAddModal(true)} data-testid="btn-add-employee">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Karyawan
         </Button>
       </div>
 
-      {/* Filters */}
       <Card className="card-vercel">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -163,6 +193,7 @@ export default function Employees() {
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="input-search-employee"
               />
             </div>
             <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
@@ -177,14 +208,25 @@ export default function Employees() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger className="w-full sm:w-40 bg-background">
+                <UserCog className="mr-2 h-4 w-4" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                <SelectItem value="all">Semua Role</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Employees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEmployees.map((emp) => (
-          <Card key={emp.id} className="card-vercel group">
+          <Card key={emp.id} className="card-vercel group" data-testid={`employee-card-${emp.id}`}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
@@ -229,13 +271,17 @@ export default function Employees() {
                   <Phone className="h-4 w-4" />
                   <span>{emp.phone}</span>
                 </div>
+                {emp.supervisorId && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <UserCog className="h-4 w-4" />
+                    <span>Supervisor: {getSupervisorName(emp.supervisorId)}</span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 flex items-center justify-between">
                 <Badge variant="outline">{emp.department}</Badge>
-                <Badge className={emp.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}>
-                  {emp.role === 'admin' ? 'Admin' : 'Karyawan'}
-                </Badge>
+                {getRoleBadge(emp.role)}
               </div>
             </CardContent>
           </Card>
@@ -254,7 +300,6 @@ export default function Employees() {
         </Card>
       )}
 
-      {/* Add/Edit Employee Modal */}
       <Dialog open={showAddModal} onOpenChange={resetForm}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -271,6 +316,7 @@ export default function Employees() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  data-testid="input-employee-name"
                 />
               </div>
               <div className="space-y-2">
@@ -280,6 +326,7 @@ export default function Employees() {
                   placeholder="john@company.com"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  data-testid="input-employee-email"
                 />
               </div>
             </div>
@@ -290,6 +337,7 @@ export default function Employees() {
                   placeholder="081234567890"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  data-testid="input-employee-phone"
                 />
               </div>
               <div className="space-y-2">
@@ -298,7 +346,7 @@ export default function Employees() {
                   value={formData.department} 
                   onValueChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
                 >
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background" data-testid="select-employee-dept">
                     <SelectValue placeholder="Pilih departemen" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
@@ -316,30 +364,52 @@ export default function Employees() {
                   placeholder="Software Engineer"
                   value={formData.position}
                   onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                  data-testid="input-employee-position"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
                 <Select 
                   value={formData.role} 
-                  onValueChange={(val: 'admin' | 'employee') => setFormData(prev => ({ ...prev, role: val }))}
+                  onValueChange={(val: 'admin' | 'supervisor' | 'staff') => setFormData(prev => ({ ...prev, role: val }))}
                 >
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background" data-testid="select-employee-role">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    <SelectItem value="employee">Karyawan</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+            {formData.role === 'staff' && (
+              <div className="space-y-2">
+                <Label>Supervisor</Label>
+                <Select 
+                  value={formData.supervisorId} 
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, supervisorId: val }))}
+                >
+                  <SelectTrigger className="bg-background" data-testid="select-employee-supervisor">
+                    <SelectValue placeholder="Pilih supervisor (opsional)" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="">Tidak ada supervisor</SelectItem>
+                    {supervisors.map(sup => (
+                      <SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Pilih supervisor untuk staff ini</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetForm}>
               Batal
             </Button>
-            <Button className="gradient-bg" onClick={handleSubmit}>
+            <Button className="gradient-bg" onClick={handleSubmit} data-testid="btn-submit-employee">
               {editEmployee ? 'Simpan Perubahan' : 'Tambah Karyawan'}
             </Button>
           </DialogFooter>

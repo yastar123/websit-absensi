@@ -7,18 +7,35 @@ import {
   TrendingUp,
   Calendar,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Timer,
+  CalendarDays,
+  Bell,
+  AlertTriangle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
 import { 
   getCurrentUser, 
   getEmployees, 
-  getAttendanceRecords,
   getMonthlyStats,
   getDepartmentStats,
-  getTodayAttendance
+  getTodayAttendance,
+  getTeamMembers,
+  getTeamLeaveRequests,
+  getTeamOvertimeRequests,
+  getLeaveRequests,
+  getOvertimeRequests,
+  getEmployeeLeaveRequests,
+  getEmployeeOvertimeRequests,
+  saveAttendance,
+  AttendanceRecord
 } from "@/lib/storage";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useToast } from "@/hooks/use-toast";
 
 interface StatCardProps {
   title: string;
@@ -57,19 +74,13 @@ function StatCard({ title, value, change, changeType, icon, iconBg }: StatCardPr
   );
 }
 
-export default function Dashboard() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const currentUser = getCurrentUser();
+function AdminDashboard() {
   const employees = getEmployees();
   const today = new Date();
   const monthlyStats = getMonthlyStats(today.getMonth(), today.getFullYear());
   const departmentStats = getDepartmentStats();
-  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const pendingLeave = getLeaveRequests().filter(l => l.status === 'pending');
+  const pendingOvertime = getOvertimeRequests().filter(o => o.status === 'pending');
 
   const weeklyData = [
     { name: 'Sen', hadir: 45, terlambat: 3, izin: 2 },
@@ -88,66 +99,7 @@ export default function Dashboard() {
   const COLORS = ['#0070F3', '#7928CA', '#FF0080', '#F5A623'];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Selamat datang, {currentUser?.name?.split(' ')[0]}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            {today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-3xl font-bold text-foreground font-mono">
-              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </p>
-            <p className="text-sm text-muted-foreground">Waktu Server</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Today's Status */}
-      <Card className="card-vercel overflow-hidden">
-        <div className="relative">
-          <div className="absolute inset-0 gradient-bg opacity-[0.03]" />
-          <CardContent className="relative p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl gradient-bg">
-                  <Clock className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground">Status Hari Ini</h3>
-                  <p className="text-muted-foreground">
-                    {todayAttendance?.clockIn ? (
-                      <>Clock In: <span className="font-medium text-foreground">{todayAttendance.clockIn}</span></>
-                    ) : (
-                      'Anda belum melakukan absensi hari ini'
-                    )}
-                    {todayAttendance?.clockOut && (
-                      <> • Clock Out: <span className="font-medium text-foreground">{todayAttendance.clockOut}</span></>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                todayAttendance?.status === 'present' ? 'bg-success/10 text-success' :
-                todayAttendance?.status === 'late' ? 'bg-warning/10 text-warning' :
-                'bg-muted text-muted-foreground'
-              }`}>
-                {todayAttendance?.status === 'present' ? 'Hadir Tepat Waktu' :
-                 todayAttendance?.status === 'late' ? 'Terlambat' :
-                 'Belum Absen'}
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-
-      {/* Stats Grid */}
+    <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Karyawan"
@@ -179,9 +131,26 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts */}
+      {(pendingLeave.length > 0 || pendingOvertime.length > 0) && (
+        <Card className="card-vercel border-warning/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10">
+                <Bell className="h-5 w-5 text-warning" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground">Pengajuan Menunggu Persetujuan</p>
+                <p className="text-sm text-muted-foreground">
+                  {pendingLeave.length} izin/cuti, {pendingOvertime.length} lembur
+                </p>
+              </div>
+              <Badge variant="secondary">{pendingLeave.length + pendingOvertime.length} pending</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Weekly Attendance Chart */}
         <Card className="card-vercel lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -213,7 +182,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Department Distribution */}
         <Card className="card-vercel">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -259,6 +227,421 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+    </>
+  );
+}
+
+function SupervisorDashboard() {
+  const currentUser = getCurrentUser();
+  const navigate = useNavigate();
+  const teamMembers = currentUser ? getTeamMembers(currentUser.id) : [];
+  const pendingLeave = currentUser ? getTeamLeaveRequests(currentUser.id).filter(l => l.status === 'pending') : [];
+  const pendingOvertime = currentUser ? getTeamOvertimeRequests(currentUser.id).filter(o => o.status === 'pending') : [];
+  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Anggota Tim"
+          value={teamMembers.length}
+          icon={<Users className="h-6 w-6 text-primary" />}
+          iconBg="bg-primary/10"
+        />
+        <StatCard
+          title="Hadir Hari Ini"
+          value={teamMembers.length}
+          icon={<UserCheck className="h-6 w-6 text-success" />}
+          iconBg="bg-success/10"
+        />
+        <StatCard
+          title="Izin Pending"
+          value={pendingLeave.length}
+          icon={<CalendarDays className="h-6 w-6 text-warning" />}
+          iconBg="bg-warning/10"
+        />
+        <StatCard
+          title="Lembur Pending"
+          value={pendingOvertime.length}
+          icon={<Timer className="h-6 w-6 text-blue-500" />}
+          iconBg="bg-blue-500/10"
+        />
+      </div>
+
+      {(pendingLeave.length > 0 || pendingOvertime.length > 0) && (
+        <Card className="card-vercel border-warning/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Pengajuan Tim Menunggu</p>
+                  <p className="text-sm text-muted-foreground">
+                    {pendingLeave.length} izin/cuti, {pendingOvertime.length} lembur perlu approval
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => navigate('/team')} data-testid="btn-go-to-team">
+                Lihat Tim
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="card-vercel overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 gradient-bg opacity-[0.03]" />
+          <CardContent className="relative p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl gradient-bg">
+                  <Clock className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-foreground">Absensi Anda Hari Ini</h3>
+                  <p className="text-muted-foreground">
+                    {todayAttendance?.clockIn ? (
+                      <>Clock In: <span className="font-medium text-foreground">{todayAttendance.clockIn}</span></>
+                    ) : (
+                      'Anda belum melakukan absensi hari ini'
+                    )}
+                    {todayAttendance?.clockOut && (
+                      <> | Clock Out: <span className="font-medium text-foreground">{todayAttendance.clockOut}</span></>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => navigate('/attendance')} data-testid="btn-go-to-attendance">
+                Absensi
+              </Button>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+
+      <Card className="card-vercel">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            Anggota Tim
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {teamMembers.length > 0 ? teamMembers.map((member) => (
+              <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
+                    {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{member.name}</p>
+                    <p className="text-sm text-muted-foreground">{member.position}</p>
+                  </div>
+                </div>
+                <Badge variant="outline">Staff</Badge>
+              </div>
+            )) : (
+              <p className="text-center text-muted-foreground py-4">Belum ada anggota tim</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function StaffDashboard() {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
+  const todayAttendance = currentUser ? getTodayAttendance(currentUser.id) : null;
+  const pendingLeave = currentUser ? getEmployeeLeaveRequests(currentUser.id).filter(l => l.status === 'pending') : [];
+  const pendingOvertime = currentUser ? getEmployeeOvertimeRequests(currentUser.id).filter(o => o.status === 'pending') : [];
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const leaveQuota = currentUser?.leaveQuota || 12;
+  const usedLeave = currentUser?.usedLeave || 0;
+  const remainingLeave = leaveQuota - usedLeave;
+
+  const handleQuickClockIn = async () => {
+    if (!currentUser) return;
+    setIsProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 5);
+    const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
+
+    const record: AttendanceRecord = {
+      id: `att-${currentUser.id}-${now.toISOString().split('T')[0]}`,
+      employeeId: currentUser.id,
+      date: now.toISOString().split('T')[0],
+      clockIn: timeStr,
+      status: isLate ? 'late' : 'present',
+    };
+
+    saveAttendance(record);
+    setIsProcessing(false);
+    toast({
+      title: "Clock In Berhasil",
+      description: `Anda tercatat masuk pada ${timeStr}${isLate ? ' (Terlambat)' : ''}`,
+    });
+    window.location.reload();
+  };
+
+  const handleQuickClockOut = async () => {
+    if (!currentUser || !todayAttendance) return;
+    setIsProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 5);
+
+    const record: AttendanceRecord = {
+      ...todayAttendance,
+      clockOut: timeStr,
+    };
+
+    saveAttendance(record);
+    setIsProcessing(false);
+    toast({
+      title: "Clock Out Berhasil",
+      description: `Anda tercatat pulang pada ${timeStr}`,
+    });
+    window.location.reload();
+  };
+
+  return (
+    <>
+      <Card className="card-vercel overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 gradient-bg opacity-[0.05]" />
+          <CardContent className="relative p-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl gradient-bg">
+                  <Clock className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-xl text-foreground">Status Absensi Hari Ini</h3>
+                  <p className="text-muted-foreground mt-1">
+                    {todayAttendance?.clockIn ? (
+                      <>
+                        Clock In: <span className="font-medium text-foreground">{todayAttendance.clockIn}</span>
+                        {todayAttendance?.clockOut && (
+                          <> | Clock Out: <span className="font-medium text-foreground">{todayAttendance.clockOut}</span></>
+                        )}
+                      </>
+                    ) : (
+                      'Anda belum melakukan absensi hari ini'
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                {!todayAttendance?.clockIn ? (
+                  <Button 
+                    size="lg" 
+                    className="h-12 px-6 gradient-bg"
+                    onClick={handleQuickClockIn}
+                    disabled={isProcessing}
+                    data-testid="btn-clock-in"
+                  >
+                    {isProcessing ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <>
+                        <UserCheck className="mr-2 h-5 w-5" />
+                        Clock In
+                      </>
+                    )}
+                  </Button>
+                ) : !todayAttendance?.clockOut ? (
+                  <Button 
+                    size="lg"
+                    variant="outline"
+                    className="h-12 px-6 border-destructive text-destructive hover:bg-destructive/10"
+                    onClick={handleQuickClockOut}
+                    disabled={isProcessing}
+                    data-testid="btn-clock-out"
+                  >
+                    {isProcessing ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-destructive border-t-transparent" />
+                    ) : (
+                      <>
+                        <UserX className="mr-2 h-5 w-5" />
+                        Clock Out
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Badge className="bg-success/10 text-success px-4 py-2 text-base">
+                    Absensi Lengkap
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="card-vercel">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <CalendarDays className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Sisa Cuti</p>
+                <p className="text-2xl font-bold text-foreground">{remainingLeave} hari</p>
+              </div>
+            </div>
+            <Progress value={(usedLeave / leaveQuota) * 100} className="mt-4 h-2" />
+            <p className="text-xs text-muted-foreground mt-2">{usedLeave} dari {leaveQuota} hari terpakai</p>
+          </CardContent>
+        </Card>
+
+        <Card className="card-vercel">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10">
+                <Clock className="h-6 w-6 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Izin Pending</p>
+                <p className="text-2xl font-bold text-foreground">{pendingLeave.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-vercel">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
+                <Timer className="h-6 w-6 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Lembur Pending</p>
+                <p className="text-2xl font-bold text-foreground">{pendingOvertime.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {!todayAttendance?.clockOut && todayAttendance?.clockIn && (
+        <Card className="card-vercel border-warning/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10">
+                <Bell className="h-5 w-5 text-warning" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground">Jangan lupa absen keluar!</p>
+                <p className="text-sm text-muted-foreground">
+                  Pastikan Anda melakukan clock out sebelum pulang
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="card-vercel hover-elevate cursor-pointer" onClick={() => navigate('/leave')}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <CalendarDays className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Ajukan Izin/Cuti</p>
+                  <p className="text-sm text-muted-foreground">Buat pengajuan baru</p>
+                </div>
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-vercel hover-elevate cursor-pointer" onClick={() => navigate('/overtime')}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
+                  <Timer className="h-6 w-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Ajukan Lembur</p>
+                  <p className="text-sm text-muted-foreground">Buat pengajuan lembur</p>
+                </div>
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+export default function Dashboard() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const currentUser = getCurrentUser();
+  const today = new Date();
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge className="bg-primary/10 text-primary">Admin</Badge>;
+      case 'supervisor':
+        return <Badge className="bg-blue-500/10 text-blue-500">Supervisor</Badge>;
+      case 'staff':
+        return <Badge className="bg-muted text-muted-foreground">Staff</Badge>;
+      default:
+        return <Badge variant="outline">{role}</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">
+              Selamat datang, {currentUser?.name?.split(' ')[0]}!
+            </h1>
+            {currentUser && getRoleBadge(currentUser.role)}
+          </div>
+          <p className="text-muted-foreground">
+            {today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-3xl font-bold text-foreground font-mono">
+              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+            <p className="text-sm text-muted-foreground">Waktu Server</p>
+          </div>
+        </div>
+      </div>
+
+      {currentUser?.role === 'admin' && <AdminDashboard />}
+      {currentUser?.role === 'supervisor' && <SupervisorDashboard />}
+      {currentUser?.role === 'staff' && <StaffDashboard />}
     </div>
   );
 }
