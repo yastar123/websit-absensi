@@ -18,6 +18,7 @@ The system supports 3 user roles:
 ### 2. Supervisor (Team Management)
 - Dashboard kehadiran tim
 - Lihat dan kelola anggota tim
+- **Generate barcode untuk login staff departemennya**
 - Approve/reject izin tim
 - Approve/reject lembur tim
 - Laporan tim
@@ -25,6 +26,7 @@ The system supports 3 user roles:
 
 ### 3. Staff (Personal Attendance)
 - Dashboard pribadi
+- **Login menggunakan barcode dari supervisor**
 - Clock in/out absensi
 - Pengajuan izin & cuti
 - Pengajuan lembur
@@ -71,6 +73,12 @@ src/
 - Tests: `npm run test`
 
 ## Recent Changes
+- January 29, 2026: Implemented barcode login system
+  - Supervisor dapat generate barcode untuk login staff di departemennya
+  - Staff login menggunakan barcode dari supervisor (berlaku 24 jam)
+  - Barcode hanya berlaku untuk staff di departemen yang sama
+  - Added Barcode management page for supervisors
+  - Database: Added barcodes table for storing generated codes
 - January 28, 2026: Enhanced role-specific dashboards
   - Admin Dashboard: Overview seluruh karyawan, statistik kehadiran, grafik mingguan, notifikasi pending approval
   - Supervisor Dashboard: Overview tim, anggota tim, approval pending, quick access ke team management
