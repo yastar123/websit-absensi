@@ -80,10 +80,36 @@ app.delete("/api/employees/:id", async (req, res) => {
 
 app.post("/api/employees", async (req, res) => {
   try {
-    const result = await db.insert(schema.employees).values(req.body).returning();
+    const { id, department, ...data } = req.body;
+    const values = {
+      ...data,
+      departmentId: data.departmentId ? parseInt(data.departmentId.toString()) : null,
+      supervisorId: data.supervisorId ? parseInt(data.supervisorId.toString()) : null,
+      // If id is empty string or emp-XXX, don't include it to let serial auto-increment
+      ...(id && !id.toString().startsWith('emp-') ? { id: parseInt(id.toString()) } : {})
+    };
+    
+    // Check if employee with this email already exists when creating new
+    if (!id || id.toString().startsWith('emp-')) {
+      const existing = await db.query.employees.findFirst({
+        where: eq(schema.employees.email, data.email)
+      });
+      if (existing) {
+        return res.status(400).json({ error: "Email sudah terdaftar" });
+      }
+    }
+
+    const result = await db.insert(schema.employees)
+      .values(values)
+      .onConflictDoUpdate({
+        target: schema.employees.id,
+        set: values
+      })
+      .returning();
     res.status(201).json(result[0]);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create employee" });
+    console.error("Employee creation error:", error);
+    res.status(500).json({ error: "Gagal menyimpan data karyawan" });
   }
 });
 

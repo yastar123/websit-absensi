@@ -69,15 +69,16 @@ export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  const loadData = async () => {
+    const [emps, depts] = await Promise.all([
+      getEmployees(),
+      getDepartments()
+    ]);
+    setEmployees(emps);
+    setDepartments(depts);
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      const [emps, depts] = await Promise.all([
-        getEmployees(),
-        getDepartments()
-      ]);
-      setEmployees(emps);
-      setDepartments(depts);
-    };
     loadData();
   }, []);
 
@@ -101,50 +102,65 @@ export default function Employees() {
       return;
     }
 
-    const newEmployee: Employee = {
-      id: editEmployee?.id || `emp-${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      department: formData.department,
-      position: formData.position,
-      role: formData.role,
-      supervisorId: formData.role === 'staff' ? formData.supervisorId : undefined,
-      joinDate: editEmployee?.joinDate || new Date().toISOString().split('T')[0],
-      leaveQuota: 12,
-      usedLeave: editEmployee?.usedLeave || 0,
-    };
+    try {
+      const dept = departments.find(d => d.name === formData.department);
+      
+      const newEmployeeData: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        departmentId: dept?.id,
+        position: formData.position,
+        role: formData.role,
+        supervisorId: formData.role === 'staff' && formData.supervisorId ? parseInt(formData.supervisorId) : null,
+        joinDate: editEmployee?.joinDate || new Date().toISOString().split('T')[0],
+      };
 
-    await saveEmployee(newEmployee);
-    
-    // Update department if role is supervisor
-    if (formData.role === 'supervisor') {
-      const allDepts = await getDepartments();
-      const dept = allDepts.find(d => d.name === formData.department);
-      if (dept) {
+      if (editEmployee) {
+        newEmployeeData.id = parseInt(editEmployee.id);
+      }
+
+      await saveEmployee(newEmployeeData);
+      
+      // Update department if role is supervisor
+      if (formData.role === 'supervisor' && dept) {
         await saveDepartment({
           ...dept,
           manager: formData.name
         } as any);
       }
-    }
 
-    toast({
-      title: editEmployee ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
-      description: `Data karyawan ${formData.name} telah ${editEmployee ? 'diperbarui' : 'ditambahkan'}`,
-    });
-    
-    resetForm();
-    window.location.reload();
+      toast({
+        title: editEmployee ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
+        description: `Data karyawan ${formData.name} telah ${editEmployee ? 'diperbarui' : 'ditambahkan'}`,
+      });
+      
+      resetForm();
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Gagal Menyimpan",
+        description: error.message || "Terjadi kesalahan saat menyimpan data",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDelete = async (emp: Employee) => {
-    await deleteEmployee(emp.id);
-    toast({
-      title: "Berhasil Dihapus",
-      description: `Karyawan ${emp.name} telah dihapus dari sistem`,
-    });
-    window.location.reload();
+    try {
+      await deleteEmployee(emp.id);
+      toast({
+        title: "Berhasil Dihapus",
+        description: `Karyawan ${emp.name} telah dihapus dari sistem`,
+      });
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Gagal Menghapus",
+        description: "Terjadi kesalahan saat menghapus data",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEdit = (emp: Employee) => {

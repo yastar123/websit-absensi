@@ -52,6 +52,7 @@ export interface Department {
   id: string;
   name: string;
   description: string;
+  manager?: string;
 }
 
 export interface WorkShift {
@@ -223,12 +224,16 @@ export const getShifts = async (): Promise<WorkShift[]> => {
   return res.json();
 };
 
-export const saveEmployee = async (employee: Employee): Promise<Employee> => {
+export const saveEmployee = async (employee: any): Promise<Employee> => {
   const res = await fetch(`${API_URL}/employees`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(employee),
   });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Gagal menyimpan data karyawan");
+  }
   return res.json();
 };
 
@@ -238,12 +243,16 @@ export const deleteEmployee = async (id: string): Promise<void> => {
   });
 };
 
-export const saveDepartment = async (department: Department): Promise<Department> => {
+export const saveDepartment = async (department: any): Promise<Department> => {
   const res = await fetch(`${API_URL}/departments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(department),
   });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Gagal menyimpan data departemen");
+  }
   return res.json();
 };
 
