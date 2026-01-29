@@ -141,10 +141,22 @@ app.post("/api/login", async (req, res) => {
   const { email } = req.body;
   try {
     const user = await db.query.employees.findFirst({
-      where: eq(schema.employees.email, email)
+      where: eq(schema.employees.email, email),
+      with: {
+        department: true,
+      }
     });
     if (user) {
-      res.json(user);
+      // Transform to match frontend interface
+      const transformed = {
+        ...user,
+        id: user.id.toString(),
+        department: user.department?.name || "Unassigned",
+        position: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+        leaveQuota: 12,
+        usedLeave: 0
+      };
+      res.json(transformed);
     } else {
       res.status(401).json({ error: "Email not found" });
     }
