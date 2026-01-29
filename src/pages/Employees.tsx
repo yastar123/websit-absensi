@@ -112,7 +112,7 @@ export default function Employees() {
         departmentId: dept?.id,
         position: formData.position,
         role: formData.role,
-        supervisorId: formData.role === 'staff' && formData.supervisorId ? parseInt(formData.supervisorId) : null,
+        supervisorId: formData.role === 'staff' && formData.supervisorId && formData.supervisorId !== 'none' ? parseInt(formData.supervisorId) : null,
         joinDate: editEmployee?.joinDate || new Date().toISOString().split('T')[0],
       };
 
@@ -439,7 +439,7 @@ export default function Employees() {
                     <SelectValue placeholder="Pilih supervisor (opsional)" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    <SelectItem value="">Tidak ada supervisor</SelectItem>
+                    <SelectItem value="none">Tidak ada supervisor</SelectItem>
                     {supervisors.map(sup => (
                       <SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>
                     ))}
