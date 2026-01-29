@@ -106,7 +106,7 @@ export default function Barcode() {
       <div>
         <h1 className="text-3xl font-bold">Manajemen Barcode</h1>
         <p className="text-muted-foreground mt-1">
-          Generate barcode untuk login staff di departemen Anda
+          Generate barcode untuk absensi staff di departemen Anda
         </p>
       </div>
 
@@ -225,14 +225,13 @@ export default function Barcode() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Cara Penggunaan</CardTitle>
+          <CardTitle>Cara Penggunaan Barcode Absensi</CardTitle>
         </CardHeader>
         <CardContent>
           <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
             <li>Klik tombol "Generate Barcode" untuk membuat kode baru</li>
             <li>Bagikan kode barcode kepada staff di departemen Anda</li>
-            <li>Staff dapat login dengan memasukkan email dan kode barcode</li>
-            <li>Setelah login, staff dapat melakukan absensi dengan scan barcode yang sama</li>
+            <li>Staff dapat melakukan absensi dengan scan barcode ini di menu "Absensi"</li>
             <li>Barcode berlaku selama 24 jam sejak dibuat</li>
             <li>Anda dapat membuat barcode baru kapan saja (barcode lama otomatis tidak aktif)</li>
             <li>Sebagai Supervisor, Anda juga dapat menandai kehadiran staff secara manual di menu "Tim Saya"</li>
