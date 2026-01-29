@@ -80,7 +80,7 @@ export default function Employees() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // Only load once on mount
 
   const supervisors = employees.filter(e => e.role === 'supervisor');
 

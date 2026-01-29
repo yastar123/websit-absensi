@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Clock, 
   QrCode, 
-  MapPin, 
   CheckCircle2, 
   XCircle,
   History,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Camera
 } from "lucide-react";
+import QrScanner from "qr-scanner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +33,7 @@ import {
   getTodayAttendance, 
   saveAttendance,
   getEmployeeAttendance,
+  scanBarcode,
   AttendanceRecord
 } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -41,8 +44,23 @@ export default function Attendance() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
+  const [scannerActive, setScannerActive] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [scanMode, setScanMode] = useState<'camera' | 'upload'>('camera');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const qrScannerRef = useRef<QrScanner | null>(null);
   const currentUser = getCurrentUser();
   const { toast } = useToast();
+
+  // Callback ref to ensure video element is captured
+  const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
+    if (node) {
+      videoRef.current = node;
+      setVideoReady(true);
+      console.log("Video element set via callback ref");
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -60,7 +78,162 @@ export default function Attendance() {
       setAttendanceHistory(history.slice(0, 10));
     };
     fetchData();
-  }, [currentUser]);
+  }, [currentUser?.id]); // Only refetch when user ID changes
+
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, []);
+
+  const handleScanResult = async (qrCode: string) => {
+    setIsProcessing(true);
+    stopScanner();
+    
+    try {
+      const result = await scanBarcode(qrCode, currentUser?.email || "");
+      toast({
+        title: "Absensi Berhasil",
+        description: `Anda berhasil absen dengan barcode`,
+      });
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Gagal Absen",
+        description: error.message || "Barcode tidak valid",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+      setShowBarcodeModal(false);
+    }
+  };
+
+  const startScanner = async () => {
+    console.log("Starting QR scanner...");
+    console.log("Video ready state:", videoReady);
+    console.log("Video ref exists:", !!videoRef.current);
+    
+    if (!videoReady || !videoRef.current) {
+      console.error("Video not ready");
+      toast({
+        title: "Error",
+        description: "Video element not ready. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setScannerActive(true);
+      console.log("Creating QR Scanner...");
+      
+      qrScannerRef.current = new QrScanner(
+        videoRef.current,
+        async (result) => {
+          console.log("QR Code detected:", result.data);
+          // Vibrate on successful scan (if supported)
+          if ('vibrate' in navigator) {
+            navigator.vibrate(200);
+          }
+          await handleScanResult(result.data);
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          returnDetailedScanResult: true,
+        }
+      );
+      
+      console.log("Starting QR Scanner...");
+      await qrScannerRef.current.start();
+      console.log("QR Scanner started successfully - Ready to scan!");
+    } catch (error) {
+      console.error("Failed to start scanner:", error);
+      toast({
+        title: "Error",
+        description: `Gagal memulai kamera: ${error.message || error}`,
+        variant: "destructive"
+      });
+      setScannerActive(false);
+    }
+  };
+
+  const stopScanner = () => {
+    console.log("Stopping QR scanner...");
+    
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
+      qrScannerRef.current = null;
+    }
+    
+    setScannerActive(false);
+    console.log("QR Scanner stopped");
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    
+    try {
+      console.log("Processing uploaded file:", file.name);
+      
+      // Create image element to process the QR code
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      img.onload = async () => {
+        if (!ctx) {
+          throw new Error('Canvas context not available');
+        }
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        try {
+          // Use qr-scanner to decode the image
+          const result = await QrScanner.scanImage(canvas.toDataURL(), {
+            returnDetailedScanResult: true,
+          });
+          
+          if (result && result.data) {
+            console.log("QR Code detected from image:", result.data);
+            await handleScanResult(result.data);
+          } else {
+            throw new Error('No QR code found in image');
+          }
+        } catch (scanError) {
+          console.error("QR scan error:", scanError);
+          throw new Error('QR code tidak terdeteksi di gambar. Pastikan gambar jelas dan QR code terlihat dengan baik.');
+        }
+      };
+      
+      img.onerror = () => {
+        throw new Error('Gagal memuat gambar. Pastikan format gambar valid.');
+      };
+      
+      img.src = URL.createObjectURL(file);
+      
+    } catch (error: any) {
+      console.error("File upload error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Gagal memproses gambar",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleClockIn = async () => {
     if (!currentUser) return;
@@ -165,7 +338,7 @@ export default function Attendance() {
                   {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
                 <div className="flex items-center justify-center lg:justify-start gap-2 mt-3 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
+                  <Clock className="h-4 w-4" />
                   <span>Kantor Pusat - Jakarta</span>
                 </div>
               </div>
@@ -298,40 +471,106 @@ export default function Attendance() {
       </Card>
 
       {/* Barcode Modal */}
-      <Dialog open={showBarcodeModal} onOpenChange={setShowBarcodeModal}>
+      <Dialog open={showBarcodeModal} onOpenChange={(open) => {
+        setShowBarcodeModal(open);
+        if (!open) {
+          stopScanner();
+          setVideoReady(false); // Reset video ready state
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Scan Barcode Absensi</DialogTitle>
             <DialogDescription>
-              Arahkan barcode ke kamera untuk melakukan absensi
+              Pilih metode scan untuk melakukan absensi
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Scan Mode Toggle */}
+          <div className="flex gap-2 p-1 bg-muted rounded-lg">
+            <Button
+              variant={scanMode === 'camera' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setScanMode('camera')}
+              className="flex-1"
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              Kamera
+            </Button>
+            <Button
+              variant={scanMode === 'upload' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setScanMode('upload')}
+              className="flex-1"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload
+            </Button>
+          </div>
           <div className="flex flex-col items-center py-8 space-y-6">
-            <div className="relative h-64 w-64 bg-muted rounded-xl flex items-center justify-center overflow-hidden">
+            <div className="relative h-64 w-64 bg-black rounded-xl overflow-hidden">
               {isProcessing ? (
-                <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center justify-center h-full gap-4">
                   <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <p className="text-sm text-muted-foreground">Memproses...</p>
+                  <p className="text-sm text-white">Memproses...</p>
                 </div>
-              ) : (
+              ) : scanMode === 'camera' ? (
                 <>
-                  <QrCode className="h-32 w-32 text-muted-foreground/30" />
-                  <div className="absolute inset-0 border-2 border-dashed border-primary/50 m-4 rounded-lg" />
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary animate-pulse-soft" />
+                  <video
+                    ref={setVideoRef}
+                    className={`w-full h-full object-cover ${scannerActive ? 'block' : 'hidden'}`}
+                    onLoadedData={() => console.log("Video loaded successfully")}
+                  />
+                  {!scannerActive && (
+                    <div className="flex flex-col items-center justify-center h-full gap-4 absolute inset-0">
+                      <QrCode className="h-32 w-32 text-white/50" />
+                      <p className="text-sm text-white/70">Kamera tidak aktif</p>
+                      <p className="text-xs text-white/50">Klik "Mulai Scanner" untuk memulai</p>
+                      <p className="text-xs text-white/50">Video ref: {videoRef.current ? "found" : "not found"}, Ready: {videoReady.toString()}</p>
+                    </div>
+                  )}
                 </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <Upload className="h-32 w-32 text-white/50" />
+                  <p className="text-sm text-white/70">Upload QR Code</p>
+                  <p className="text-xs text-white/50">Pilih gambar QR code dari laptop</p>
+                </div>
               )}
             </div>
-            <Button 
-              className="w-full gradient-bg" 
-              onClick={handleBarcodeAttendance}
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Memproses...' : 'Simulasi Scan'}
-            </Button>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              Ini adalah simulasi. Pada implementasi nyata, gunakan kamera.
-            </p>
+            
+            {scanMode === 'camera' ? (
+              <>
+                <Button 
+                  className="w-full gradient-bg" 
+                  onClick={() => {
+                    console.log("Camera button clicked!");
+                    startScanner();
+                  }}
+                  disabled={isProcessing}
+                >
+                  {scannerActive ? 'Stop Scanner' : 'Mulai Scanner'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button 
+                  className="w-full gradient-bg" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {isProcessing ? 'Memproses...' : 'Pilih Gambar QR Code'}
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

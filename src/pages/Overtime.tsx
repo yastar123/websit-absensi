@@ -56,7 +56,7 @@ export default function Overtime() {
       setOvertimeRequests(requests);
     };
     fetchData();
-  }, [currentUser]);
+  }, [currentUser?.id]); // Only refetch when user ID changes
 
   const pendingRequests = overtimeRequests.filter(r => r.status === 'pending').length;
   const approvedRequests = overtimeRequests.filter(r => r.status === 'approved');

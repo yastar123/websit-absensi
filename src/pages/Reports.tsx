@@ -57,7 +57,7 @@ export default function Reports() {
       setAllRecords(records);
     };
     fetchData();
-  }, []);
+  }, [selectedMonth, selectedDepartment]); // Add dependencies
 
   const currentYear = new Date().getFullYear();
   const filteredRecords = allRecords.filter(r => {

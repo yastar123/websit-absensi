@@ -219,6 +219,19 @@ export const getEmployeeOvertimeRequests = async (employeeId: string): Promise<O
   return requests.filter(o => o.employeeId === employeeId);
 };
 
+export const scanBarcode = async (code: string, staffEmail: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/barcode/scan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, staffEmail }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Gagal scan barcode");
+  }
+  return res.json();
+};
+
 export const getShifts = async (): Promise<WorkShift[]> => {
   const res = await fetch(`${API_URL}/shifts`);
   return res.json();

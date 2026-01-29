@@ -35,7 +35,7 @@ export default function Barcode() {
       loadActiveBarcode();
       loadDepartmentStaff();
     }
-  }, []);
+  }, [currentUser?.id]); // Only refetch when user ID changes
 
   useEffect(() => {
     if (!activeBarcode) return;
@@ -124,7 +124,7 @@ export default function Barcode() {
             <p className="text-muted-foreground text-center">
               Hanya supervisor yang dapat mengakses fitur generate barcode.
               <br />
-              Staff dapat login menggunakan barcode dari supervisor departemen masing-masing.
+              Staff dapat menggunakan barcode untuk absensi di departemen masing-masing.
             </p>
           </CardContent>
         </Card>
@@ -147,7 +147,7 @@ export default function Barcode() {
                 <QrCode className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Barcode Login</CardTitle>
+                <CardTitle>Barcode Absensi</CardTitle>
                 <CardDescription>
                   Departemen {currentUser.department}
                 </CardDescription>

@@ -78,7 +78,7 @@ export default function Departments() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // Only load once on mount
 
   const loadData = async () => {
     const [depts, shiftsData, emps] = await Promise.all([
@@ -110,7 +110,7 @@ export default function Departments() {
       await saveDepartment({
         id: editDept?.id || "",
         name: deptForm.name,
-        description: deptForm.description,
+        description: "", // Empty description since field was removed
       });
 
       toast({
@@ -119,7 +119,7 @@ export default function Departments() {
       });
 
       resetDeptForm();
-      loadData();
+      window.location.reload(); // Force reload to refresh the list
     } catch (error) {
       toast({
         title: "Error",
@@ -387,15 +387,6 @@ export default function Departments() {
                 placeholder="Engineering"
                 value={deptForm.name}
                 onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Deskripsi</Label>
-              <Textarea 
-                placeholder="Deskripsi singkat departemen..."
-                value={deptForm.description}
-                onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
               />
             </div>
           </div>

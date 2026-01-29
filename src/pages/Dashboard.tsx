@@ -100,8 +100,10 @@ function AdminDashboard() {
       setPendingLeave(lReqs.filter(l => l.status === 'pending'));
       setPendingOvertime(oReqs.filter(o => o.status === 'pending'));
     };
+    
+    // Only fetch once on mount
     fetchData();
-  }, []);
+  }, []); // Keep empty array for initial load only
 
   const weeklyData = [
     { name: 'Sen', hadir: 45, terlambat: 3, izin: 2 },

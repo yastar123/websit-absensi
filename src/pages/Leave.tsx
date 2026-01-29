@@ -64,7 +64,7 @@ export default function Leave() {
       setLeaveRequests(requests);
     };
     fetchData();
-  }, [currentUser]);
+  }, [currentUser?.id]); // Only refetch when user ID changes
 
   const leaveQuota = currentUser?.leaveQuota || 12;
   const usedLeave = currentUser?.usedLeave || 0;

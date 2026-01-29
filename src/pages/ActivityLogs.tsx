@@ -28,16 +28,16 @@ export default function ActivityLogs() {
   useEffect(() => {
     const loadLogs = async () => {
       try {
-        const data = await getActivityLogs();
-        setLogs(data);
+        const logsData = await getActivityLogs();
+        setLogs(logsData);
       } catch (error) {
-        console.error("Failed to load logs:", error);
+        console.error("Failed to load activity logs:", error);
       } finally {
         setLoading(false);
       }
     };
     loadLogs();
-  }, []);
+  }, []); // Only load once on mount
 
   const filteredLogs = logs.filter(log => 
     log.user?.name.toLowerCase().includes(search.toLowerCase()) ||
