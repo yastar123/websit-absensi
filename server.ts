@@ -40,10 +40,33 @@ app.post("/api/departments", async (req, res) => {
 // Employees
 app.get("/api/employees", async (req, res) => {
   try {
-    const result = await db.query.employees.findMany();
-    res.json(result);
+    const result = await db.query.employees.findMany({
+      with: {
+        department: true,
+      }
+    });
+    // Transform to match frontend interface
+    const transformed = result.map(e => ({
+      ...e,
+      id: e.id.toString(),
+      department: e.department?.name || "Unassigned",
+      position: e.role.charAt(0).toUpperCase() + e.role.slice(1),
+      leaveQuota: 12,
+      usedLeave: 0
+    }));
+    res.json(transformed);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch employees" });
+  }
+});
+
+app.delete("/api/employees/:id", async (req, res) => {
+  try {
+    await db.delete(schema.employees).where(eq(schema.employees.id, parseInt(req.params.id)));
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete employee" });
   }
 });
 

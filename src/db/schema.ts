@@ -1,4 +1,5 @@
 import { pgTable, serial, text, timestamp, date, integer, doublePrecision, boolean } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
@@ -45,3 +46,10 @@ export const overtime = pgTable("overtime", {
   reason: text("reason"),
   status: text("status").default("pending"),
 });
+
+export const employeesRelations = relations(employees, ({ one }) => ({
+  department: one(departments, {
+    fields: [employees.departmentId],
+    references: [departments.id],
+  }),
+}));
