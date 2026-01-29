@@ -139,7 +139,7 @@ app.post("/api/overtime", async (req, res) => {
 
 // Auth
 app.post("/api/login", async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await db.query.employees.findFirst({
       where: eq(schema.employees.email, email),
@@ -148,6 +148,12 @@ app.post("/api/login", async (req, res) => {
       }
     });
     if (user) {
+      // In a real app, we would verify the password here
+      // For this demo, we'll allow 'demo123' or any password if not set
+      if (password !== "demo123") {
+        return res.status(401).json({ error: "Password salah" });
+      }
+
       // Transform to match frontend interface
       const transformed = {
         ...user,
@@ -159,10 +165,59 @@ app.post("/api/login", async (req, res) => {
       };
       res.json(transformed);
     } else {
-      res.status(401).json({ error: "Email not found" });
+      res.status(401).json({ error: "Email tidak ditemukan" });
     }
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Manual Attendance (Supervisor only)
+app.post("/api/attendance/manual", async (req, res) => {
+  const { supervisorId, employeeId, status } = req.body;
+  try {
+    const supervisor = await db.query.employees.findFirst({
+      where: and(
+        eq(schema.employees.id, parseInt(supervisorId)),
+        eq(schema.employees.role, "supervisor")
+      )
+    });
+
+    if (!supervisor) {
+      return res.status(403).json({ error: "Hanya supervisor yang dapat melakukan absensi manual" });
+    }
+
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().slice(0, 5);
+
+    // Check if record already exists
+    const existing = await db.query.attendance.findFirst({
+      where: and(
+        eq(schema.attendance.employeeId, parseInt(employeeId)),
+        eq(schema.attendance.date, dateStr)
+      )
+    });
+
+    let result;
+    if (existing) {
+      result = await db.update(schema.attendance)
+        .set({ status: status || 'present' })
+        .where(eq(schema.attendance.id, existing.id))
+        .returning();
+    } else {
+      result = await db.insert(schema.attendance).values({
+        employeeId: parseInt(employeeId),
+        date: dateStr,
+        checkIn: now,
+        status: status || 'present'
+      }).returning();
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Gagal melakukan absensi manual" });
   }
 });
 

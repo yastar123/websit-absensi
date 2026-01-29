@@ -232,8 +232,10 @@ export default function Barcode() {
             <li>Klik tombol "Generate Barcode" untuk membuat kode baru</li>
             <li>Bagikan kode barcode kepada staff di departemen Anda</li>
             <li>Staff dapat login dengan memasukkan email dan kode barcode</li>
+            <li>Setelah login, staff dapat melakukan absensi dengan scan barcode yang sama</li>
             <li>Barcode berlaku selama 24 jam sejak dibuat</li>
             <li>Anda dapat membuat barcode baru kapan saja (barcode lama otomatis tidak aktif)</li>
+            <li>Sebagai Supervisor, Anda juga dapat menandai kehadiran staff secara manual di menu "Tim Saya"</li>
           </ol>
         </CardContent>
       </Card>

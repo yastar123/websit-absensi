@@ -21,6 +21,7 @@ import {
   getTeamOvertimeRequests,
   saveLeaveRequest,
   saveOvertimeRequest,
+  markAttendanceManual,
   Employee,
   LeaveRequest,
   OvertimeRequest,
@@ -100,6 +101,27 @@ export default function Team() {
   const getMemberName = (employeeId: string) => {
     const member = teamMembers.find(m => m.id === employeeId);
     return member?.name || 'Unknown';
+  };
+
+  const handleManualAttendance = async (employeeId: string) => {
+    if (!currentUser) return;
+    try {
+      await markAttendanceManual(currentUser.id, employeeId);
+      toast({
+        title: "Absensi Berhasil",
+        description: `Berhasil mencatat kehadiran manual untuk ${getMemberName(employeeId)}`,
+      });
+      // Refresh data
+      const attendance = await getTeamAttendance(currentUser.id);
+      const today = new Date().toISOString().split('T')[0];
+      setTeamAttendance(attendance.filter(a => a.date === today));
+    } catch (error: any) {
+      toast({
+        title: "Gagal",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -191,11 +213,13 @@ export default function Team() {
                     <TableHead>Posisi</TableHead>
                     <TableHead>Status Hari Ini</TableHead>
                     <TableHead>Clock In</TableHead>
+                    <TableHead>Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {teamMembers.map((member) => {
                     const attendance = getMemberAttendance(member.id);
+                    const isPresent = attendance?.status === 'present' || attendance?.status === 'late';
                     return (
                       <TableRow key={member.id} data-testid={`team-member-${member.id}`}>
                         <TableCell>
@@ -226,6 +250,17 @@ export default function Team() {
                           </Badge>
                         </TableCell>
                         <TableCell>{attendance?.clockIn || '-'}</TableCell>
+                        <TableCell>
+                          {!isPresent && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleManualAttendance(member.id)}
+                            >
+                              Tandai Hadir
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}

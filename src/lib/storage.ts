@@ -87,13 +87,29 @@ export const getDepartments = async (): Promise<Department[]> => {
   return res.json();
 };
 
-export const login = async (email: string): Promise<Employee> => {
+export const login = async (email: string, password?: string): Promise<Employee> => {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error("Login failed");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Login failed");
+  }
+  return res.json();
+};
+
+export const markAttendanceManual = async (supervisorId: string, employeeId: string): Promise<AttendanceRecord> => {
+  const res = await fetch(`${API_URL}/attendance/manual`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorId, employeeId, status: 'present' }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Gagal melakukan absensi manual");
+  }
   return res.json();
 };
 

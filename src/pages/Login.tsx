@@ -24,7 +24,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const user = await login(email);
+      const user = await login(email, password);
       if (user) {
         setCurrentUser(user);
         toast({
@@ -33,10 +33,10 @@ export default function Login() {
         });
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login gagal",
-        description: "Email tidak ditemukan. Coba: admin@company.com atau supervisor@company.com",
+        description: error.message || "Email atau password salah. Demo: demo123",
         variant: "destructive",
       });
     }
