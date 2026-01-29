@@ -101,9 +101,22 @@ export default function Reports() {
 
   const handleExport = (format: 'excel' | 'pdf') => {
     toast({
-      title: "Export Berhasil",
-      description: `Laporan telah diexport ke format ${format.toUpperCase()}`,
+      title: "Mengunduh Laporan",
+      description: `Laporan sedang disiapkan dalam format ${format.toUpperCase()}...`,
     });
+    
+    // Simple simulation of download
+    setTimeout(() => {
+      const blob = new Blob(["Simulated report content"], { type: "text/plain" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Laporan_Absensi_${selectedMonth}_${selectedDepartment}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 1500);
   };
 
   const months = [

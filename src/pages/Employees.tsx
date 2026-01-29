@@ -125,7 +125,7 @@ export default function Employees() {
         await saveDepartment({
           ...dept,
           manager: formData.name
-        });
+        } as any);
       }
     }
 

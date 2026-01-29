@@ -5,6 +5,7 @@ export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   manager: text("manager"),
+  description: text("description"),
   employeeCount: integer("employee_count").default(0),
 });
 

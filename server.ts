@@ -246,7 +246,7 @@ app.post("/api/barcode/generate", async (req, res) => {
       .where(eq(schema.barcodes.supervisorId, supervisor.id));
 
     const code = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
 
     const result = await db.insert(schema.barcodes).values({
       code,
@@ -356,7 +356,7 @@ app.get("/api/settings", async (req, res) => {
     companyName: "PT. AbsensiPro Indonesia",
     workStartTime: "09:00",
     workEndTime: "18:00",
-    lateThreshold: 15,
+    lateThreshold: 0, // No tolerance
   });
 });
 
