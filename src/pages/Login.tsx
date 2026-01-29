@@ -147,30 +147,33 @@ export default function Login() {
 
           <div className="space-y-2 text-center">
             <p className="text-sm text-muted-foreground font-medium">Akun Demo:</p>
-            <div className="flex flex-col gap-1 text-sm">
+            <div className="flex flex-col gap-2 text-sm">
               <button
                 type="button"
                 onClick={() => { setEmail('admin@company.com'); setPassword('demo123'); }}
-                className="text-primary hover:underline"
+                className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-accent transition-colors"
                 data-testid="demo-admin"
               >
-                Admin: admin@company.com
+                <span className="font-bold text-primary">Admin</span>
+                <span className="text-xs text-muted-foreground">Email: admin@company.com | PW: demo123</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setEmail('supervisor@company.com'); setPassword('demo123'); }}
-                className="text-primary hover:underline"
+                className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-accent transition-colors"
                 data-testid="demo-supervisor"
               >
-                Supervisor: supervisor@company.com
+                <span className="font-bold text-primary">Supervisor</span>
+                <span className="text-xs text-muted-foreground">Email: supervisor@company.com | PW: demo123</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setEmail('staff@company.com'); setPassword('demo123'); }}
-                className="text-primary hover:underline"
+                className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-accent transition-colors"
                 data-testid="demo-staff"
               >
-                Staff: staff@company.com
+                <span className="font-bold text-primary">Staff</span>
+                <span className="text-xs text-muted-foreground">Email: staff@company.com | PW: demo123</span>
               </button>
             </div>
           </div>
