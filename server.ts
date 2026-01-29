@@ -3,7 +3,8 @@ import cors from "cors";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./src/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, gt } from "drizzle-orm";
+import crypto from "crypto";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -162,6 +163,119 @@ app.post("/api/login", async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Barcode - Generate (Supervisor only)
+app.post("/api/barcode/generate", async (req, res) => {
+  const { supervisorId } = req.body;
+  try {
+    const supervisor = await db.query.employees.findFirst({
+      where: and(
+        eq(schema.employees.id, parseInt(supervisorId)),
+        eq(schema.employees.role, "supervisor")
+      ),
+      with: { department: true }
+    });
+
+    if (!supervisor) {
+      return res.status(403).json({ error: "Only supervisors can generate barcodes" });
+    }
+
+    if (!supervisor.departmentId) {
+      return res.status(400).json({ error: "Supervisor must be assigned to a department" });
+    }
+
+    await db.update(schema.barcodes)
+      .set({ isActive: false })
+      .where(eq(schema.barcodes.supervisorId, supervisor.id));
+
+    const code = crypto.randomBytes(16).toString("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const result = await db.insert(schema.barcodes).values({
+      code,
+      supervisorId: supervisor.id,
+      departmentId: supervisor.departmentId,
+      expiresAt,
+      isActive: true
+    }).returning();
+
+    res.json({
+      barcode: result[0],
+      department: supervisor.department?.name
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to generate barcode" });
+  }
+});
+
+// Barcode - Scan/Login (Staff only)
+app.post("/api/barcode/scan", async (req, res) => {
+  const { code, staffEmail } = req.body;
+  try {
+    const barcode = await db.query.barcodes.findFirst({
+      where: and(
+        eq(schema.barcodes.code, code),
+        eq(schema.barcodes.isActive, true),
+        gt(schema.barcodes.expiresAt, new Date())
+      ),
+      with: { department: true, supervisor: true }
+    });
+
+    if (!barcode) {
+      return res.status(401).json({ error: "Invalid or expired barcode" });
+    }
+
+    const staff = await db.query.employees.findFirst({
+      where: and(
+        eq(schema.employees.email, staffEmail),
+        eq(schema.employees.role, "staff"),
+        eq(schema.employees.departmentId, barcode.departmentId)
+      ),
+      with: { department: true }
+    });
+
+    if (!staff) {
+      return res.status(401).json({ error: "Staff not found or not in this department" });
+    }
+
+    const transformed = {
+      ...staff,
+      id: staff.id.toString(),
+      department: staff.department?.name || "Unassigned",
+      position: staff.role.charAt(0).toUpperCase() + staff.role.slice(1),
+      leaveQuota: 12,
+      usedLeave: 0
+    };
+
+    res.json(transformed);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to scan barcode" });
+  }
+});
+
+// Get active barcode for supervisor
+app.get("/api/barcode/:supervisorId", async (req, res) => {
+  try {
+    const barcode = await db.query.barcodes.findFirst({
+      where: and(
+        eq(schema.barcodes.supervisorId, parseInt(req.params.supervisorId)),
+        eq(schema.barcodes.isActive, true),
+        gt(schema.barcodes.expiresAt, new Date())
+      ),
+      with: { department: true }
+    });
+
+    if (!barcode) {
+      return res.status(404).json({ error: "No active barcode found" });
+    }
+
+    res.json(barcode);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch barcode" });
   }
 });
 
