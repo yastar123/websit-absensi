@@ -75,3 +75,18 @@ export const barcodesRelations = relations(barcodes, ({ one }) => ({
     references: [departments.id],
   }),
 }));
+
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => employees.id),
+  action: text("action").notNull(),
+  details: text("details"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const activityLogRelations = relations(activityLogs, ({ one }) => ({
+  user: one(employees, {
+    fields: [activityLogs.userId],
+    references: [employees.id],
+  }),
+}));

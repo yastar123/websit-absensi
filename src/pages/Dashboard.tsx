@@ -139,14 +139,6 @@ function AdminDashboard() {
           iconBg="bg-success/10"
         />
         <StatCard
-          title="Terlambat"
-          value={monthlyStats.totalLate}
-          change="3%"
-          changeType="negative"
-          icon={<Clock className="h-6 w-6 text-warning" />}
-          iconBg="bg-warning/10"
-        />
-        <StatCard
           title="Tidak Hadir"
           value={monthlyStats.totalAbsent}
           icon={<UserX className="h-6 w-6 text-destructive" />}
@@ -197,7 +189,6 @@ function AdminDashboard() {
                     }}
                   />
                   <Bar dataKey="hadir" name="Hadir" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="terlambat" name="Terlambat" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="izin" name="Izin" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

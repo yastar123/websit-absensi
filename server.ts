@@ -31,9 +31,16 @@ app.get("/api/departments", async (req, res) => {
 
 app.post("/api/departments", async (req, res) => {
   try {
-    const result = await db.insert(schema.departments).values(req.body).returning();
+    const { id, ...data } = req.body;
+    const values = {
+      ...data,
+      // If id is empty string or null, don't include it to let serial auto-increment
+      ...(id && id !== "" ? { id: parseInt(id) } : {})
+    };
+    const result = await db.insert(schema.departments).values(values).returning();
     res.status(201).json(result[0]);
   } catch (error) {
+    console.error("Department creation error:", error);
     res.status(500).json({ error: "Failed to create department" });
   }
 });
@@ -371,6 +378,22 @@ app.get("/api/shifts", async (req, res) => {
     ]);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch shifts" });
+  }
+});
+
+// Activity Logs
+app.get("/api/activity-logs", async (req, res) => {
+  try {
+    const logs = await db.query.activityLogs.findMany({
+      with: {
+        user: true,
+      },
+      orderBy: (activityLogs, { desc }) => [desc(activityLogs.timestamp)],
+      limit: 100,
+    });
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch activity logs" });
   }
 });
 

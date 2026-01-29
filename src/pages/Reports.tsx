@@ -135,7 +135,6 @@ export default function Reports() {
   ];
 
   const totalPresent = employeeStats.reduce((sum, e) => sum + e.present, 0);
-  const totalLate = employeeStats.reduce((sum, e) => sum + e.late, 0);
   const totalAbsent = employeeStats.reduce((sum, e) => sum + e.absent, 0);
   const avgAttendanceRate = employeeStats.length > 0
     ? (employeeStats.reduce((sum, e) => sum + parseFloat(e.attendanceRate), 0) / employeeStats.length).toFixed(1)
@@ -197,7 +196,7 @@ export default function Reports() {
       </Card>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="card-vercel">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -207,19 +206,6 @@ export default function Reports() {
               <div>
                 <p className="text-2xl font-bold text-foreground">{totalPresent}</p>
                 <p className="text-xs text-muted-foreground">Total Hadir</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="card-vercel">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
-                <Clock className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{totalLate}</p>
-                <p className="text-xs text-muted-foreground">Terlambat</p>
               </div>
             </div>
           </CardContent>
@@ -275,7 +261,6 @@ export default function Reports() {
                   }}
                 />
                 <Line type="monotone" dataKey="hadir" name="Hadir" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="terlambat" name="Terlambat" stroke="hsl(var(--warning))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -297,7 +282,6 @@ export default function Reports() {
                 <TableHead>Nama</TableHead>
                 <TableHead>Departemen</TableHead>
                 <TableHead className="text-center">Hadir</TableHead>
-                <TableHead className="text-center">Terlambat</TableHead>
                 <TableHead className="text-center">Tidak Hadir</TableHead>
                 <TableHead className="text-center">Cuti/Izin</TableHead>
                 <TableHead className="text-right">Tingkat Kehadiran</TableHead>
@@ -311,7 +295,6 @@ export default function Reports() {
                     <Badge variant="outline">{emp.department}</Badge>
                   </TableCell>
                   <TableCell className="text-center text-success font-medium">{emp.present}</TableCell>
-                  <TableCell className="text-center text-warning font-medium">{emp.late}</TableCell>
                   <TableCell className="text-center text-destructive font-medium">{emp.absent}</TableCell>
                   <TableCell className="text-center text-muted-foreground">{emp.leave}</TableCell>
                   <TableCell className="text-right">

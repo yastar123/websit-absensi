@@ -87,6 +87,11 @@ export const getDepartments = async (): Promise<Department[]> => {
   return res.json();
 };
 
+export const getActivityLogs = async (): Promise<any[]> => {
+  const res = await fetch(`${API_URL}/activity-logs`);
+  return res.json();
+};
+
 export const login = async (email: string, password?: string): Promise<Employee> => {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",

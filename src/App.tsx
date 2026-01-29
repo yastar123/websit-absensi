@@ -12,6 +12,7 @@ import Overtime from "@/pages/Overtime";
 import Reports from "@/pages/Reports";
 import Employees from "@/pages/Employees";
 import Departments from "@/pages/Departments";
+import ActivityLogs from "@/pages/ActivityLogs";
 import Settings from "@/pages/Settings";
 import Team from "@/pages/Team";
 import Barcode from "@/pages/Barcode";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/barcode" element={<Barcode />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/departments" element={<Departments />} />
+            <Route path="/activity-logs" element={<ActivityLogs />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />

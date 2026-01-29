@@ -56,6 +56,7 @@ const adminMenuItems = [
   { title: "Laporan", url: "/reports", icon: FileBarChart },
   { title: "Karyawan", url: "/employees", icon: Users },
   { title: "Departemen", url: "/departments", icon: Building2 },
+  { title: "Activity Logs", url: "/activity-logs", icon: FileBarChart },
   { title: "Pengaturan", url: "/settings", icon: Settings },
 ];
 
