@@ -43,6 +43,7 @@ import {
   getDepartments,
   saveEmployee,
   deleteEmployee,
+  saveDepartment,
   Employee,
   Department
 } from "@/lib/storage";
@@ -115,6 +116,19 @@ export default function Employees() {
     };
 
     await saveEmployee(newEmployee);
+    
+    // Update department if role is supervisor
+    if (formData.role === 'supervisor') {
+      const allDepts = await getDepartments();
+      const dept = allDepts.find(d => d.name === formData.department);
+      if (dept) {
+        await saveDepartment({
+          ...dept,
+          manager: formData.name
+        });
+      }
+    }
+
     toast({
       title: editEmployee ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
       description: `Data karyawan ${formData.name} telah ${editEmployee ? 'diperbarui' : 'ditambahkan'}`,

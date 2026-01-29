@@ -1,14 +1,32 @@
 import { useState, useEffect } from "react";
-import { QrCode, Copy, RefreshCw, Clock, Users } from "lucide-react";
+import { 
+  QrCode, 
+  RefreshCw, 
+  Copy, 
+  CheckCircle2, 
+  Clock, 
+  Building2, 
+  Users 
+} from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser, generateBarcode, getActiveBarcode, getEmployees, type Barcode as BarcodeType, type Employee } from "@/lib/storage";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  getCurrentUser, 
+  generateBarcode, 
+  getActiveBarcode, 
+  getEmployees, 
+  type Barcode as BarcodeType, 
+  type Employee 
+} from "@/lib/storage";
 
 export default function Barcode() {
   const [activeBarcode, setActiveBarcode] = useState<BarcodeType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [departmentStaff, setDepartmentStaff] = useState<Employee[]>([]);
+  const [timeLeft, setTimeLeft] = useState("");
   const currentUser = getCurrentUser();
   const { toast } = useToast();
 
@@ -18,6 +36,28 @@ export default function Barcode() {
       loadDepartmentStaff();
     }
   }, []);
+
+  useEffect(() => {
+    if (!activeBarcode) return;
+
+    const interval = setInterval(() => {
+      const expiry = new Date(activeBarcode.expiresAt);
+      const now = new Date();
+      const diff = expiry.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft("Expired");
+        clearInterval(interval);
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${hours}j ${minutes}m lagi`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeBarcode]);
 
   const loadActiveBarcode = async () => {
     if (!currentUser) return;
@@ -74,15 +114,6 @@ export default function Barcode() {
     }
   };
 
-  const formatExpiryTime = (expiresAt: string) => {
-    const expiry = new Date(expiresAt);
-    const now = new Date();
-    const diff = expiry.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}j ${minutes}m`;
-  };
-
   if (currentUser?.role !== "supervisor") {
     return (
       <div className="p-8">
@@ -102,140 +133,153 @@ export default function Barcode() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold">Manajemen Barcode</h1>
-        <p className="text-muted-foreground mt-1">
-          Generate barcode untuk absensi staff di departemen Anda
-        </p>
+        <h1 className="text-3xl font-bold text-foreground">Manajemen Barcode</h1>
+        <p className="text-muted-foreground">Generate barcode untuk absensi staff di departemen Anda</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Barcode Login
-            </CardTitle>
-            <CardDescription>
-              Generate barcode untuk staff di departemen {currentUser?.department}
-            </CardDescription>
+        <Card className="card-vercel overflow-hidden">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <QrCode className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Barcode Login</CardTitle>
+                <CardDescription>
+                  Departemen {currentUser.department}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {activeBarcode ? (
-              <div className="space-y-4">
-                <div className="p-6 bg-muted rounded-lg text-center">
-                  <p className="text-xs text-muted-foreground mb-2">Kode Barcode</p>
-                  <p className="font-mono text-lg font-bold break-all">
-                    {activeBarcode.code}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-green-700">Berlaku</span>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center space-y-6">
+              {activeBarcode ? (
+                <>
+                  <div className="p-4 bg-white rounded-2xl shadow-sm border border-border">
+                    <QRCodeSVG 
+                      value={activeBarcode.code} 
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                    />
                   </div>
-                  <span className="text-sm font-medium text-green-700">
-                    {formatExpiryTime(activeBarcode.expiresAt)} lagi
-                  </span>
-                </div>
+                  
+                  <div className="w-full space-y-4">
+                    <div className="flex flex-col items-center p-3 bg-muted/50 rounded-xl border border-dashed">
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Kode Barcode</span>
+                      <span className="text-sm font-mono font-bold text-foreground break-all text-center">
+                        {activeBarcode.code}
+                      </span>
+                    </div>
 
-                <div className="flex gap-2">
-                  <Button onClick={copyToClipboard} variant="outline" className="flex-1">
-                    <Copy className="h-4 w-4 mr-2" />
-                    Salin Kode
-                  </Button>
-                  <Button
-                    onClick={handleGenerateBarcode}
-                    variant="outline"
-                    disabled={isLoading}
-                    className="flex-1"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-                    Generate Baru
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-8 bg-muted rounded-lg flex flex-col items-center">
-                  <QrCode className="h-12 w-12 text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground text-center">
-                    Belum ada barcode aktif
+                    <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                      <div className="flex items-center gap-2 text-emerald-600">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-xs font-medium">Berlaku</span>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-600">{timeLeft}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="w-full" onClick={copyToClipboard}>
+                        <Copy className="mr-2 h-3 w-3" />
+                        Salin
+                      </Button>
+                      <Button 
+                        size="sm"
+                        className="w-full gradient-bg" 
+                        onClick={handleGenerateBarcode}
+                        disabled={isLoading}
+                      >
+                        <RefreshCw className={`mr-2 h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+                        Update
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center py-8 text-center">
+                  <QrCode className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-sm font-semibold">Belum Ada Barcode</h3>
+                  <p className="text-xs text-muted-foreground mb-6">
+                    Generate barcode pertama untuk departemen Anda.
                   </p>
+                  <Button className="gradient-bg" onClick={handleGenerateBarcode} disabled={isLoading}>
+                    {isLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <QrCode className="mr-2 h-4 w-4" />}
+                    Buat Barcode
+                  </Button>
                 </div>
-
-                <Button
-                  onClick={handleGenerateBarcode}
-                  className="w-full gradient-bg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      <QrCode className="h-4 w-4 mr-2" />
-                      Generate Barcode
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Staff Departemen
-            </CardTitle>
-            <CardDescription>
-              Daftar staff yang dapat menggunakan barcode ini
-            </CardDescription>
+        <Card className="card-vercel">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <CardTitle>Staff Departemen</CardTitle>
+                <CardDescription>
+                  Daftar staff yang dapat menggunakan barcode
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            {departmentStaff.length > 0 ? (
-              <div className="space-y-3">
-                {departmentStaff.map((staff) => (
-                  <div
-                    key={staff.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{staff.name}</p>
-                      <p className="text-sm text-muted-foreground">{staff.email}</p>
+          <CardContent className="p-0">
+            <div className="max-h-[400px] overflow-y-auto">
+              {departmentStaff.length > 0 ? (
+                <div className="divide-y divide-border">
+                  {departmentStaff.map((staff) => (
+                    <div key={staff.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{staff.name}</span>
+                        <span className="text-xs text-muted-foreground">{staff.email}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">Staff</Badge>
                     </div>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                      Staff
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>Tidak ada staff di departemen ini</p>
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="p-12 text-center text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-xs">Tidak ada staff terdaftar</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Cara Penggunaan Barcode Absensi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-            <li>Klik tombol "Generate Barcode" untuk membuat kode baru</li>
-            <li>Bagikan kode barcode kepada staff di departemen Anda</li>
-            <li>Staff dapat melakukan absensi dengan scan barcode ini di menu "Absensi"</li>
-            <li>Barcode berlaku selama 24 jam sejak dibuat</li>
-            <li>Anda dapat membuat barcode baru kapan saja (barcode lama otomatis tidak aktif)</li>
-            <li>Sebagai Supervisor, Anda juga dapat menandai kehadiran staff secara manual di menu "Tim Saya"</li>
-          </ol>
+      <Card className="card-vercel">
+        <CardContent className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-primary" />
+            Cara Penggunaan
+          </h3>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <li className="flex gap-2">
+              <span className="font-bold text-primary">1.</span>
+              Generate barcode baru setiap hari atau jika barcode lama sudah expired.
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold text-primary">2.</span>
+              Tampilkan barcode ini kepada staff Anda di kantor.
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold text-primary">3.</span>
+              Staff menscan barcode melalui menu "Absensi" di akun mereka masing-masing.
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold text-primary">4.</span>
+              Sistem akan memverifikasi apakah staff tersebut berada di departemen Anda.
+            </li>
+          </ul>
         </CardContent>
       </Card>
     </div>

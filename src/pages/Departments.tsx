@@ -61,22 +61,30 @@ export default function Departments() {
   const [shifts, setShifts] = useState<WorkShift[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
 
+  const supervisors = employees.filter(e => e.role === 'supervisor');
+
   useEffect(() => {
-    const loadData = async () => {
-      const [depts, shiftsData, emps] = await Promise.all([
-        getDepartments(),
-        getShifts(),
-        getEmployees()
-      ]);
-      setDepartments(depts);
-      setShifts(shiftsData);
-      setEmployees(emps);
-    };
     loadData();
   }, []);
 
+  const loadData = async () => {
+    const [depts, shiftsData, emps] = await Promise.all([
+      getDepartments(),
+      getShifts(),
+      getEmployees()
+    ]);
+    setDepartments(depts);
+    setShifts(shiftsData);
+    setEmployees(emps);
+  };
+
   const getEmployeeCount = (deptName: string) => {
     return employees.filter(e => e.department === deptName).length;
+  };
+
+  const getManagerName = (deptName: string) => {
+    const supervisor = supervisors.find(e => e.department === deptName);
+    return supervisor ? supervisor.name : "Belum ditentukan";
   };
 
   const handleDeptSubmit = async () => {
@@ -196,7 +204,7 @@ export default function Departments() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">{dept.name}</h3>
-                        <p className="text-sm text-muted-foreground">{dept.description}</p>
+                        <p className="text-xs text-muted-foreground">Supervisor: {getManagerName(dept.name)}</p>
                       </div>
                     </div>
                     <DropdownMenu>
