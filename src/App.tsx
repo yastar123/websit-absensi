@@ -14,6 +14,7 @@ import Employees from "@/pages/Employees";
 import Departments from "@/pages/Departments";
 import Settings from "@/pages/Settings";
 import Team from "@/pages/Team";
+import Barcode from "@/pages/Barcode";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/overtime" element={<Overtime />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/team" element={<Team />} />
+            <Route path="/barcode" element={<Barcode />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/settings" element={<Settings />} />

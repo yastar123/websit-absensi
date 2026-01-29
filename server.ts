@@ -228,6 +228,10 @@ app.post("/api/barcode/scan", async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired barcode" });
     }
 
+    if (!barcode.departmentId) {
+      return res.status(400).json({ error: "Barcode has no department assigned" });
+    }
+
     const staff = await db.query.employees.findFirst({
       where: and(
         eq(schema.employees.email, staffEmail),

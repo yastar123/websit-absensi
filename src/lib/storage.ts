@@ -97,6 +97,48 @@ export const login = async (email: string): Promise<Employee> => {
   return res.json();
 };
 
+export const loginWithBarcode = async (code: string, staffEmail: string): Promise<Employee> => {
+  const res = await fetch(`${API_URL}/barcode/scan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, staffEmail }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Barcode login failed");
+  }
+  return res.json();
+};
+
+export interface Barcode {
+  id: number;
+  code: string;
+  supervisorId: number;
+  departmentId: number;
+  createdAt: string;
+  expiresAt: string;
+  isActive: boolean;
+}
+
+export const generateBarcode = async (supervisorId: string): Promise<{ barcode: Barcode; department: string }> => {
+  const res = await fetch(`${API_URL}/barcode/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supervisorId }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to generate barcode");
+  }
+  return res.json();
+};
+
+export const getActiveBarcode = async (supervisorId: string): Promise<Barcode | null> => {
+  const res = await fetch(`${API_URL}/barcode/${supervisorId}`);
+  if (!res.ok) return null;
+  return res.json();
+};
+
 export const saveAttendance = async (record: AttendanceRecord): Promise<AttendanceRecord> => {
   const res = await fetch(`${API_URL}/attendance`, {
     method: "POST",

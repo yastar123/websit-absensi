@@ -8,7 +8,8 @@ import {
   Building2,
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  QrCode
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -46,6 +47,7 @@ const staffMenuItems = [
 // Additional menu items for supervisor
 const supervisorMenuItems = [
   { title: "Tim Saya", url: "/team", icon: Users },
+  { title: "Barcode Login", url: "/barcode", icon: QrCode },
   { title: "Laporan Tim", url: "/reports", icon: FileBarChart },
 ];
 
