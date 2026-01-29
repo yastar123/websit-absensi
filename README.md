@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
+# AbsensiPro - Sistem Manajemen Kehadiran Modern
 
-## Project info
+AbsensiPro adalah platform manajemen kehadiran (attendance management) yang dirancang untuk efisiensi dan transparansi dalam pengelolaan karyawan. Sistem ini mendukung peran bertingkat (Role-Based Access Control) untuk Admin, Supervisor, dan Staff.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Fitur Utama
 
-## How can I edit this code?
+### 1. Dashboard Interaktif
+- **Admin**: Ringkasan kehadiran seluruh perusahaan, statistik mingguan, dan notifikasi persetujuan yang tertunda.
+- **Supervisor**: Monitoring kehadiran tim, ringkasan anggota tim, dan pengelolaan pengajuan izin/lembur tim.
+- **Staff**: Pencatatan kehadiran (Clock In/Out), sisa cuti, dan status pengajuan pribadi.
 
-There are several ways of editing your application.
+### 2. Manajemen Karyawan & Departemen (Admin)
+- Menambah, mengedit, dan menonaktifkan akun karyawan.
+- Pengaturan departemen dan penugasan Supervisor.
+- Filter peran (Admin, Supervisor, Staff) untuk manajemen yang lebih mudah.
 
-**Use Lovable**
+### 3. Sistem Kehadiran (Attendance)
+- Pencatatan waktu masuk (Clock In) dan keluar (Clock Out).
+- Deteksi keterlambatan otomatis berdasarkan aturan perusahaan.
+- Riwayat kehadiran lengkap dengan status (Hadir, Terlambat, Izin, Sakit).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 4. Pengajuan Izin & Cuti (Leave Requests)
+- Formulir pengajuan izin/cuti untuk karyawan.
+- Alur persetujuan (approval) oleh Admin atau Supervisor.
+- Pemantauan kuota cuti tahunan.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 5. Pengajuan Lembur (Overtime)
+- Pengajuan jam lembur untuk tugas tambahan.
+- Persetujuan lembur yang terintegrasi dengan laporan.
 
-**Use your preferred IDE**
+### 6. Laporan (Reports)
+- Laporan bulanan otomatis.
+- Statistik kehadiran per departemen.
+- Ekspor data untuk kebutuhan penggajian (payroll).
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Arsitektur Teknologi
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: React (TypeScript), Vite, TailwindCSS, Shadcn/UI.
+- **Backend**: Express.js (Node.js) dengan TypeScript.
+- **Database**: PostgreSQL dengan Drizzle ORM.
+- **State Management**: React Query (TanStack Query).
 
-Follow these steps:
+## 🔑 Akun Demo (Gunakan untuk Pengujian)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+| Peran | Email | Password |
+|-------|-------|----------|
+| **Admin** | `admin@company.com` | `demo123` |
+| **Supervisor** | `supervisor@company.com` | `demo123` |
+| **Staff** | `staff@company.com` | `demo123` |
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## ⚙️ Cara Menjalankan Project
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Pastikan database PostgreSQL sudah dikonfigurasi di environment.
+2. Jalankan seeding untuk data awal:
+   ```bash
+   npx tsx src/db/seed.ts
+   ```
+3. Mulai Backend:
+   ```bash
+   npx tsx server.ts
+   ```
+4. Mulai Frontend:
+   ```bash
+   npm run dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Dikembangkan dengan ❤️ untuk produktivitas yang lebih baik.*
