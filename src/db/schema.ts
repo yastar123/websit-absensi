@@ -47,9 +47,30 @@ export const overtime = pgTable("overtime", {
   status: text("status").default("pending"),
 });
 
+export const barcodes = pgTable("barcodes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  supervisorId: integer("supervisor_id").references(() => employees.id),
+  departmentId: integer("department_id").references(() => departments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true),
+});
+
 export const employeesRelations = relations(employees, ({ one }) => ({
   department: one(departments, {
     fields: [employees.departmentId],
+    references: [departments.id],
+  }),
+}));
+
+export const barcodesRelations = relations(barcodes, ({ one }) => ({
+  supervisor: one(employees, {
+    fields: [barcodes.supervisorId],
+    references: [employees.id],
+  }),
+  department: one(departments, {
+    fields: [barcodes.departmentId],
     references: [departments.id],
   }),
 }));
