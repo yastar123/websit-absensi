@@ -334,22 +334,16 @@ function SupervisorDashboard() {
                   <Clock className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg text-foreground">Absensi Anda Hari Ini</h3>
+                  <h3 className="font-semibold text-lg text-foreground">Status Kehadiran</h3>
                   <p className="text-muted-foreground">
                     {todayAttendance?.clockIn ? (
-                      <>Clock In: <span className="font-medium text-foreground">{todayAttendance.clockIn}</span></>
+                      <Badge className="bg-success/10 text-success">Hadir</Badge>
                     ) : (
-                      'Anda belum melakukan absensi hari ini'
-                    )}
-                    {todayAttendance?.clockOut && (
-                      <> | Clock Out: <span className="font-medium text-foreground">{todayAttendance.clockOut}</span></>
+                      <Badge className="bg-destructive/10 text-destructive">Tidak Hadir</Badge>
                     )}
                   </p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/attendance')} data-testid="btn-go-to-attendance">
-                Absensi
-              </Button>
             </div>
           </CardContent>
         </div>

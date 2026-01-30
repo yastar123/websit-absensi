@@ -39,9 +39,7 @@ import {
 // Menu items for all roles
 const staffMenuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Absensi", url: "/attendance", icon: Clock },
   { title: "Izin & Cuti", url: "/leave", icon: CalendarDays },
-  { title: "Lembur", url: "/overtime", icon: Timer },
 ];
 
 // Additional menu items for supervisor
