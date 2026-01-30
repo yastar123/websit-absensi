@@ -544,27 +544,9 @@ app.post("/api/barcode/generate", async (req, res) => {
       barcode: result[0],
       department: supervisor.department?.name
     });
-  } catch (error) {
-    console.error("Barcode generation error:", error);
-    
-    // Fallback to mock data when database fails
-    const code = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry
-    
-    const mockBarcode = {
-      id: Math.floor(Math.random() * 1000) + 1,
-      code,
-      supervisorId: parseInt(supervisorId),
-      departmentId: 1, // Default IT department
-      expiresAt,
-      isActive: true,
-      createdAt: new Date().toISOString()
-    };
-    
-    res.json({
-      barcode: mockBarcode,
-      department: "IT"
-    });
+  } catch (error: any) {
+    console.error("Barcode generation error details:", error);
+    res.status(500).json({ error: "Gagal generate barcode: " + (error.message || "Internal Error") });
   }
 });
 
