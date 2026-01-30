@@ -258,24 +258,34 @@ function SupervisorDashboard() {
   useEffect(() => {
     if (!currentUser) return;
     const fetchData = async () => {
-      const [members, lReqs, oReqs, tAtt] = await Promise.all([
+      // Supervisor can now see department stats and all leave/overtime requests to show staff data
+      const [members, lReqs, oReqs, tAtt, dStats] = await Promise.all([
         getTeamMembers(currentUser.id),
-        getTeamLeaveRequests(currentUser.id),
-        getTeamOvertimeRequests(currentUser.id),
-        getTodayAttendance(currentUser.id)
+        getLeaveRequests(), // Get all to filter/show staff data
+        getOvertimeRequests(), // Get all to filter/show staff data
+        getTodayAttendance(currentUser.id),
+        getDepartmentStats()
       ]);
       setTeamMembers(members);
       setPendingLeave(lReqs.filter(l => l.status === 'pending'));
       setPendingOvertime(oReqs.filter(o => o.status === 'pending'));
       setTodayAttendance(tAtt || null);
+      setDepartmentStats(dStats);
     };
     fetchData();
   }, [currentUser]);
 
+  const [departmentStats, setDepartmentStats] = useState<any[]>([]);
+
   return (
     <>
-      {/* Removed Status Kehadiran and Anggota Tim stats for Supervisor as requested */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatCard
+          title="Staff Per Departemen"
+          value={departmentStats.reduce((acc, curr) => acc + curr.total, 0)}
+          icon={<Users className="h-6 w-6 text-primary" />}
+          iconBg="bg-primary/10"
+        />
         <StatCard
           title="Izin Pending"
           value={pendingLeave.length}
@@ -288,6 +298,24 @@ function SupervisorDashboard() {
           icon={<Timer className="h-6 w-6 text-blue-500" />}
           iconBg="bg-blue-500/10"
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card className="card-vercel">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Staff Per Departemen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {departmentStats.map((stat) => (
+                <div key={stat.department} className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{stat.department}</span>
+                  <Badge variant="secondary">{stat.total} Staff</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {(pendingLeave.length > 0 || pendingOvertime.length > 0) && (

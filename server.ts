@@ -664,9 +664,13 @@ app.get("/api/barcode/:supervisorId", async (req, res) => {
 app.get("/api/reports/stats", async (req, res) => {
   const { month, department } = req.query;
   try {
-    const employees = await db.query.employees.findMany();
+    const employees = await db.query.employees.findMany({
+      with: { department: true }
+    });
     const attendance = await db.query.attendance.findMany();
-    res.json({ employees, attendance });
+    const leaveRequests = await db.query.leaveRequests.findMany();
+    const leaveTypes = await db.query.leaveTypes.findMany();
+    res.json({ employees, attendance, leaveRequests, leaveTypes });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch report stats" });
   }

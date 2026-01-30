@@ -17,6 +17,7 @@ import Settings from "@/pages/Settings";
 import Team from "@/pages/Team";
 import Barcode from "@/pages/Barcode";
 import NotFound from "@/pages/NotFound";
+import LeaveManagement from "@/pages/LeaveManagement";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/leave" element={<Leave />} />
+            <Route path="/manage-leave" element={<LeaveManagement />} />
             <Route path="/overtime" element={<Overtime />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/team" element={<Team />} />

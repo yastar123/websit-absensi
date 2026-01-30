@@ -62,6 +62,7 @@ const adminMenuItems = [
   { title: "Laporan", url: "/reports", icon: FileBarChart },
   { title: "Karyawan", url: "/employees", icon: Users },
   { title: "Departemen", url: "/departments", icon: Building2 },
+  { title: "Kelola Cuti", url: "/manage-leave", icon: CalendarDays },
   { title: "Pengaturan", url: "/settings", icon: Settings },
 ];
 

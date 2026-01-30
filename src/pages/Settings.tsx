@@ -64,7 +64,7 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Work Hours Settings */}
+      {/* Jam Kerja Settings */}
       <Card className="card-vercel">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
