@@ -40,21 +40,29 @@ export default function Team() {
   
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'supervisor') return;
+    let isMounted = true;
     const fetchData = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const [members, attendance, leaves, overtimes] = await Promise.all([
-        getTeamMembers(currentUser.id),
-        getTeamAttendance(currentUser.id),
-        getTeamLeaveRequests(currentUser.id),
-        getTeamOvertimeRequests(currentUser.id)
-      ]);
-      setTeamMembers(members);
-      setTeamAttendance(attendance.filter(a => a.date === today));
-      setPendingLeave(leaves.filter(l => l.status === 'pending'));
-      setPendingOvertime(overtimes.filter(o => o.status === 'pending'));
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const [members, attendance, leaves, overtimes] = await Promise.all([
+          getTeamMembers(currentUser.id),
+          getTeamAttendance(currentUser.id),
+          getTeamLeaveRequests(currentUser.id),
+          getTeamOvertimeRequests(currentUser.id)
+        ]);
+        if (isMounted) {
+          setTeamMembers(members);
+          setTeamAttendance(attendance.filter(a => a.date === today));
+          setPendingLeave(leaves.filter(l => l.status === 'pending'));
+          setPendingOvertime(overtimes.filter(o => o.status === 'pending'));
+        }
+      } catch (error) {
+        console.error("Error fetching team data:", error);
+      }
     };
     fetchData();
-  }, [currentUser]);
+    return () => { isMounted = false; };
+  }, [currentUser?.id]); // Only dependency is ID
 
   if (!currentUser || currentUser.role !== 'supervisor') {
     return (

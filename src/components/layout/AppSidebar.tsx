@@ -39,6 +39,7 @@ import {
 // Menu items for all roles
 const staffMenuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Status Kehadiran", url: "/attendance", icon: Clock },
   { title: "Izin & Cuti", url: "/leave", icon: CalendarDays },
 ];
 

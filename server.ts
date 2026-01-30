@@ -284,10 +284,29 @@ app.get("/api/leave", async (req, res) => {
 
 app.post("/api/leave", async (req, res) => {
   try {
-    const result = await db.insert(schema.leaveRequests).values(req.body).returning();
+    const { id, employeeId, ...data } = req.body;
+    
+    // Check if employee exists
+    const employee = await db.query.employees.findFirst({
+      where: eq(schema.employees.id, parseInt(employeeId.toString()))
+    });
+
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const values = {
+      ...data,
+      employeeId: parseInt(employeeId.toString()),
+      // Ensure numeric IDs for references if they exist in body
+      approvedBy: data.approvedBy ? parseInt(data.approvedBy.toString()) : null,
+    };
+    
+    const result = await db.insert(schema.leaveRequests).values(values).returning();
     res.status(201).json(result[0]);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to submit leave request" });
+  } catch (error: any) {
+    console.error("Leave request error:", error);
+    res.status(500).json({ error: "Gagal mengajukan izin: " + (error.message || "Internal Error") });
   }
 });
 
