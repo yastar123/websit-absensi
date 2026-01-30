@@ -74,12 +74,15 @@ export default function Reports() {
       const absent = empRecords.filter(r => r.status === 'absent').length;
       const leave = empRecords.filter(r => r.status === 'leave' || r.status === 'sick').length;
       
+      const sessions = Array.from(new Set(empRecords.map(r => r.sessionNumber).filter(Boolean)));
+      
       return {
         ...emp,
         present,
         late,
         absent,
         leave,
+        sessions,
         total: present + late + absent + leave,
         attendanceRate: ((present + late) / Math.max(present + late + absent, 1) * 100).toFixed(1),
       };
@@ -282,19 +285,27 @@ export default function Reports() {
                 <TableHead>Nama</TableHead>
                 <TableHead>Departemen</TableHead>
                 <TableHead className="text-center">Hadir</TableHead>
+                <TableHead className="text-center">Sesi</TableHead>
                 <TableHead className="text-center">Tidak Hadir</TableHead>
                 <TableHead className="text-center">Cuti/Izin</TableHead>
                 <TableHead className="text-right">Tingkat Kehadiran</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {employeeStats.map((emp) => (
+              {employeeStats.map((emp: any) => (
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium">{emp.name}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{emp.department}</Badge>
                   </TableCell>
                   <TableCell className="text-center text-success font-medium">{emp.present}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {emp.sessions.map((s: string) => (
+                        <Badge key={s} variant="secondary" className="text-[8px] px-1">{s}</Badge>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-center text-destructive font-medium">{emp.absent}</TableCell>
                   <TableCell className="text-center text-muted-foreground">{emp.leave}</TableCell>
                   <TableCell className="text-right">

@@ -10,6 +10,26 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+// Logger middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (res.statusCode >= 400) {
+      console.error(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        method: req.method,
+        url: req.url,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+        payload: req.body,
+        employeeId: req.body.employeeId || req.body.supervisorId || "anonymous"
+      }, null, 2));
+    }
+  });
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -283,13 +303,24 @@ app.get("/api/leave", async (req, res) => {
 });
 
 app.post("/api/leave", async (req, res) => {
+  const logData: any = {
+    endpoint: "/api/leave",
+    method: "POST",
+    payload: { ...req.body },
+    timestamp: new Date().toISOString(),
+    employeeId: req.body.employeeId
+  };
+
   try {
     const { id, employeeId, type, ...data } = req.body;
     
     // Check if employee exists
     const empIdNum = parseInt(employeeId?.toString());
     if (isNaN(empIdNum)) {
-      return res.status(400).json({ error: "ID Karyawan tidak valid" });
+      const error = "ID Karyawan tidak valid";
+      logData.error = error;
+      console.error(JSON.stringify(logData, null, 2));
+      return res.status(400).json({ error });
     }
 
     const employee = await db.query.employees.findFirst({
@@ -297,7 +328,10 @@ app.post("/api/leave", async (req, res) => {
     });
 
     if (!employee) {
-      return res.status(404).json({ error: "Employee not found" });
+      const error = "Employee not found";
+      logData.error = error;
+      console.error(JSON.stringify(logData, null, 2));
+      return res.status(404).json({ error });
     }
 
     // Try to find a leave type that matches
@@ -305,18 +339,25 @@ app.post("/api/leave", async (req, res) => {
       where: eq(schema.leaveTypes.name, type || "Cuti Tahunan")
     });
 
-    const values = {
+    const values: any = {
       ...data,
       type: type || "annual",
       employeeId: empIdNum,
       leaveTypeId: leaveType?.id || null,
       approvedBy: data.approvedBy ? parseInt(data.approvedBy.toString()) : null,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      reason: data.reason,
+      status: data.status || 'pending',
+      id: undefined // Ensure ID is not manually set if it's serial
     };
     
     const result = await db.insert(schema.leaveRequests).values(values).returning();
     res.status(201).json(result[0]);
   } catch (error: any) {
-    console.error("Leave request error:", error);
+    logData.error = error.message;
+    logData.stack = error.stack;
+    console.error(JSON.stringify(logData, null, 2));
     res.status(500).json({ error: "Gagal mengajukan izin: " + (error.message || "Internal Error") });
   }
 });
@@ -537,7 +578,7 @@ app.post("/api/attendance/manual", async (req, res) => {
 
 // Barcode - Generate (Supervisor only)
 app.post("/api/barcode/generate", async (req, res) => {
-  const { supervisorId } = req.body;
+  const { supervisorId, sessionNumber } = req.body;
   try {
     const supIdNum = parseInt(supervisorId?.toString());
     if (isNaN(supIdNum)) {
@@ -571,6 +612,7 @@ app.post("/api/barcode/generate", async (req, res) => {
       code,
       supervisorId: supervisor.id,
       departmentId: supervisor.departmentId,
+      sessionNumber: sessionNumber || "absensi ke-1",
       expiresAt,
       isActive: true
     }).returning();
@@ -619,13 +661,31 @@ app.post("/api/barcode/scan", async (req, res) => {
       return res.status(401).json({ error: "Staff not found or not in this department" });
     }
 
+    // Record attendance with session number
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    
+    await db.insert(schema.attendance).values({
+      employeeId: staff.id,
+      date: dateStr,
+      checkIn: now,
+      status: 'present',
+      sessionNumber: barcode.sessionNumber
+    }).onConflictDoUpdate({
+      target: [schema.attendance.employeeId, schema.attendance.date, schema.attendance.sessionNumber],
+      set: { 
+        checkIn: now
+      }
+    });
+
     const transformed = {
       ...staff,
       id: staff.id.toString(),
       department: staff.department?.name || "Unassigned",
       position: staff.role.charAt(0).toUpperCase() + staff.role.slice(1),
       leaveQuota: 12,
-      usedLeave: 0
+      usedLeave: 0,
+      sessionNumber: barcode.sessionNumber
     };
 
     res.json(transformed);

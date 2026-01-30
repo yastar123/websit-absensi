@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, date, integer, doublePrecision, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, date, integer, doublePrecision, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const departments = pgTable("departments", {
@@ -27,6 +27,11 @@ export const attendance = pgTable("attendance", {
   checkIn: timestamp("check_in"),
   checkOut: timestamp("check_out"),
   status: text("status"), // present, late, absent
+  sessionNumber: text("session_number"),
+}, (table) => {
+  return {
+    unq: uniqueIndex("attendance_emp_date_session_idx").on(table.employeeId, table.date, table.sessionNumber),
+  };
 });
 
 export const leaveTypes = pgTable("leave_types", {
@@ -64,6 +69,7 @@ export const barcodes = pgTable("barcodes", {
   code: text("code").notNull().unique(),
   supervisorId: integer("supervisor_id").references(() => employees.id),
   departmentId: integer("department_id").references(() => departments.id),
+  sessionNumber: text("session_number"),
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
   isActive: boolean("is_active").default(true),

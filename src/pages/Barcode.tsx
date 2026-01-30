@@ -8,6 +8,14 @@ import {
   Building2, 
   Users 
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { 
   getCurrentUser, 
-  generateBarcode, 
   getActiveBarcode, 
   getEmployees, 
   type Barcode as BarcodeType, 
@@ -25,6 +32,7 @@ import {
 export default function Barcode() {
   const [activeBarcode, setActiveBarcode] = useState<BarcodeType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionNumber, setSessionNumber] = useState("absensi ke-1");
   const [departmentStaff, setDepartmentStaff] = useState<Employee[]>([]);
   const [timeLeft, setTimeLeft] = useState("");
   const currentUser = getCurrentUser();
@@ -87,11 +95,25 @@ export default function Barcode() {
     setIsLoading(true);
 
     try {
-      const result = await generateBarcode(currentUser.id);
+      const response = await fetch("/api/barcode/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          supervisorId: currentUser.id,
+          sessionNumber: sessionNumber
+        })
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Gagal membuat barcode");
+      }
+      
+      const result = await response.json();
       setActiveBarcode(result.barcode);
       toast({
         title: "Barcode berhasil dibuat",
-        description: `Barcode untuk departemen ${result.department} berlaku selama 24 jam`,
+        description: `Barcode untuk ${sessionNumber} berlaku selama 24 jam`,
       });
     } catch (error: any) {
       toast({
@@ -154,8 +176,22 @@ export default function Barcode() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center space-y-6">
+              <div className="w-full space-y-2">
+                <Label>Sesi Absensi</Label>
+                <Select value={sessionNumber} onValueChange={setSessionNumber}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih sesi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="absensi ke-1">Absensi ke-1</SelectItem>
+                    <SelectItem value="absensi ke-2">Absensi ke-2</SelectItem>
+                    <SelectItem value="absensi ke-3">Absensi ke-3</SelectItem>
+                    <SelectItem value="absensi ke-4">Absensi ke-4</SelectItem>
+                    <SelectItem value="absensi ke-5">Absensi ke-5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {activeBarcode ? (
                 <>
                   <div className="p-4 bg-white rounded-2xl shadow-sm border border-border">

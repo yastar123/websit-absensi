@@ -445,7 +445,7 @@ export default function Attendance() {
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+                    <TableBody>
               {attendanceHistory.map((record) => {
                 const duration = record.clockIn && record.clockOut 
                   ? calculateDuration(record.clockIn, record.clockOut)
@@ -463,7 +463,14 @@ export default function Attendance() {
                     <TableCell>{record.clockIn || '-'}</TableCell>
                     <TableCell>{record.clockOut || '-'}</TableCell>
                     <TableCell>{duration}</TableCell>
-                    <TableCell>{getStatusBadge(record.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {getStatusBadge(record.status)}
+                        {record.sessionNumber && (
+                          <span className="text-[10px] text-muted-foreground">{record.sessionNumber}</span>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
