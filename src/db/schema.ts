@@ -29,14 +29,25 @@ export const attendance = pgTable("attendance", {
   status: text("status"), // present, late, absent
 });
 
+export const leaveTypes = pgTable("leave_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  defaultQuota: integer("default_quota").default(12),
+  isActive: boolean("is_active").default(true),
+});
+
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
   employeeId: integer("employee_id").references(() => employees.id),
+  leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   type: text("type").notNull(), // annual, sick, etc.
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   reason: text("reason"),
   status: text("status").default("pending"), // pending, approved, rejected
+  approvedBy: integer("approved_by").references(() => employees.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const overtime = pgTable("overtime", {

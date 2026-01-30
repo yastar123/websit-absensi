@@ -696,6 +696,60 @@ app.get("/api/shifts", async (req, res) => {
   }
 });
 
+// Leave Types CRUD
+app.get("/api/leave-types", async (req, res) => {
+  try {
+    const result = await db.query.leaveTypes.findMany();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch leave types" });
+  }
+});
+
+app.post("/api/leave-types", async (req, res) => {
+  try {
+    const result = await db.insert(schema.leaveTypes).values(req.body).returning();
+    res.status(201).json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create leave type" });
+  }
+});
+
+app.put("/api/leave-types/:id", async (req, res) => {
+  try {
+    const result = await db.update(schema.leaveTypes)
+      .set(req.body)
+      .where(eq(schema.leaveTypes.id, parseInt(req.params.id)))
+      .returning();
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update leave type" });
+  }
+});
+
+app.delete("/api/leave-types/:id", async (req, res) => {
+  try {
+    await db.delete(schema.leaveTypes).where(eq(schema.leaveTypes.id, parseInt(req.params.id)));
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete leave type" });
+  }
+});
+
+// Update Employee Quota
+app.put("/api/employees/:id/quota", async (req, res) => {
+  try {
+    const { leaveQuota } = req.body;
+    const result = await db.update(schema.employees)
+      .set({ leaveQuota: parseInt(leaveQuota.toString()) })
+      .where(eq(schema.employees.id, parseInt(req.params.id)))
+      .returning();
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update quota" });
+  }
+});
+
 // Activity Logs
 app.get("/api/activity-logs", async (req, res) => {
   try {
@@ -708,34 +762,7 @@ app.get("/api/activity-logs", async (req, res) => {
     });
     res.json(logs);
   } catch (error) {
-    // Fallback to mock data when database fails
-    const mockLogs = [
-      {
-        id: 1,
-        userId: 1,
-        action: "LOGIN",
-        description: "Admin user logged in",
-        timestamp: new Date().toISOString(),
-        user: {
-          id: 1,
-          name: "Admin User",
-          email: "admin@company.com"
-        }
-      },
-      {
-        id: 2,
-        userId: 2,
-        action: "CREATE_DEPARTMENT",
-        description: "Created new department",
-        timestamp: new Date(Date.now() - 60000).toISOString(),
-        user: {
-          id: 2,
-          name: "Supervisor User",
-          email: "supervisor@company.com"
-        }
-      }
-    ];
-    res.json(mockLogs);
+    res.status(500).json({ error: "Failed to fetch activity logs" });
   }
 });
 
