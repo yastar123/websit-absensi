@@ -22,6 +22,7 @@ export interface AttendanceRecord {
   clockOut?: string;
   status: 'present' | 'absent' | 'late' | 'leave' | 'sick';
   notes?: string;
+  sessionNumber?: string;
 }
 
 export interface LeaveRequest {

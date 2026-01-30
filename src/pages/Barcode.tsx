@@ -43,7 +43,7 @@ export default function Barcode() {
       loadActiveBarcode();
       loadDepartmentStaff();
     }
-  }, [currentUser?.id]); // Only refetch when user ID changes
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (!activeBarcode) return;
@@ -70,7 +70,7 @@ export default function Barcode() {
   const loadActiveBarcode = async () => {
     if (!currentUser) return;
     try {
-      const barcode = await getActiveBarcode(currentUser.id);
+      const barcode = await getActiveBarcode(currentUser.id.toString());
       setActiveBarcode(barcode);
     } catch (error) {
       console.error("Failed to load barcode:", error);
@@ -176,6 +176,7 @@ export default function Barcode() {
               </div>
             </div>
           </CardHeader>
+          <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center space-y-6">
               <div className="w-full space-y-2">
                 <Label>Sesi Absensi</Label>
