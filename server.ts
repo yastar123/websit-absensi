@@ -530,7 +530,7 @@ app.post("/api/barcode/generate", async (req, res) => {
       .where(eq(schema.barcodes.supervisorId, supervisor.id));
 
     const code = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry
 
     const result = await db.insert(schema.barcodes).values({
       code,
@@ -549,7 +549,7 @@ app.post("/api/barcode/generate", async (req, res) => {
     
     // Fallback to mock data when database fails
     const code = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry
     
     const mockBarcode = {
       id: Math.floor(Math.random() * 1000) + 1,
