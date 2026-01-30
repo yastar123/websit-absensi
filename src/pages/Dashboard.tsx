@@ -274,19 +274,8 @@ function SupervisorDashboard() {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Anggota Tim"
-          value={teamMembers.length}
-          icon={<Users className="h-6 w-6 text-primary" />}
-          iconBg="bg-primary/10"
-        />
-        <StatCard
-          title="Hadir Hari Ini"
-          value={teamMembers.length}
-          icon={<UserCheck className="h-6 w-6 text-success" />}
-          iconBg="bg-success/10"
-        />
+      {/* Removed Status Kehadiran and Anggota Tim stats for Supervisor as requested */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <StatCard
           title="Izin Pending"
           value={pendingLeave.length}
@@ -324,59 +313,7 @@ function SupervisorDashboard() {
         </Card>
       )}
 
-      <Card className="card-vercel overflow-hidden">
-        <div className="relative">
-          <div className="absolute inset-0 gradient-bg opacity-[0.03]" />
-          <CardContent className="relative p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl gradient-bg">
-                  <Clock className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground">Status Kehadiran</h3>
-                  <p className="text-muted-foreground">
-                    {todayAttendance?.clockIn ? (
-                      <Badge className="bg-success/10 text-success">Hadir</Badge>
-                    ) : (
-                      <Badge className="bg-destructive/10 text-destructive">Tidak Hadir</Badge>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-
-      <Card className="card-vercel">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            Anggota Tim
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {teamMembers.length > 0 ? teamMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                    {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.position}</p>
-                  </div>
-                </div>
-                <Badge variant="outline">Staff</Badge>
-              </div>
-            )) : (
-              <p className="text-center text-muted-foreground py-4">Belum ada anggota tim</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Status Kehadiran and Anggota Tim components removed for Supervisor */}
     </>
   );
 }
@@ -605,23 +542,6 @@ function StaffDashboard() {
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Ajukan Izin/Cuti</p>
-                  <p className="text-sm text-muted-foreground">Buat pengajuan baru</p>
-                </div>
-              </div>
-              <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="card-vercel hover-elevate cursor-pointer" onClick={() => navigate('/overtime')}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
-                  <Timer className="h-6 w-6 text-blue-500" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Ajukan Lembur</p>
                   <p className="text-sm text-muted-foreground">Buat pengajuan baru</p>
                 </div>
               </div>

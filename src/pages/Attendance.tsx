@@ -332,7 +332,9 @@ export default function Attendance() {
               {/* Time Display */}
               <div className="text-center lg:text-left">
                 <p className="text-6xl font-bold text-foreground font-mono">
-                  {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                  {currentUser?.role === 'admin' 
+                    ? currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    : currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 <p className="text-lg text-muted-foreground mt-2">
                   {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

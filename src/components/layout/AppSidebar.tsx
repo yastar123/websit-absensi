@@ -43,6 +43,13 @@ const staffMenuItems = [
   { title: "Izin & Cuti", url: "/leave", icon: CalendarDays },
 ];
 
+const getStaffMenuItems = (role: string) => {
+  if (role === 'admin') {
+    return staffMenuItems.filter(item => item.title === "Dashboard");
+  }
+  return staffMenuItems;
+};
+
 // Additional menu items for supervisor
 const supervisorMenuItems = [
   { title: "Tim Saya", url: "/team", icon: Users },
@@ -74,6 +81,8 @@ export function AppSidebar() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const activeStaffMenuItems = getStaffMenuItems(currentUser?.role || 'staff');
+
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
@@ -97,7 +106,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {staffMenuItems.map((item) => (
+              {activeStaffMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

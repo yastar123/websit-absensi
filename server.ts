@@ -741,7 +741,7 @@ app.put("/api/employees/:id/quota", async (req, res) => {
   try {
     const { leaveQuota } = req.body;
     const result = await db.update(schema.employees)
-      .set({ leaveQuota: parseInt(leaveQuota.toString()) })
+      .set({ leaveQuota: parseInt(leaveQuota.toString()) } as any)
       .where(eq(schema.employees.id, parseInt(req.params.id)))
       .returning();
     res.json(result[0]);
