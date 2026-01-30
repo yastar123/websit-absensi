@@ -311,10 +311,6 @@ export default function Employees() {
                   <Mail className="h-4 w-4" />
                   <span className="truncate">{emp.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <span>{emp.phone}</span>
-                </div>
                 {emp.supervisorId && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <UserCog className="h-4 w-4" />
@@ -374,32 +370,21 @@ export default function Employees() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>No. Telepon</Label>
-                <Input 
-                  placeholder="081234567890"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  data-testid="input-employee-phone"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Departemen *</Label>
-                <Select 
-                  value={formData.department} 
-                  onValueChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
-                >
-                  <SelectTrigger className="bg-background" data-testid="select-employee-dept">
-                    <SelectValue placeholder="Pilih departemen" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    {departments.map(dept => (
-                      <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Departemen *</Label>
+              <Select 
+                value={formData.department} 
+                onValueChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
+              >
+                <SelectTrigger className="bg-background" data-testid="select-employee-dept">
+                  <SelectValue placeholder="Pilih departemen" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {departments.map(dept => (
+                    <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

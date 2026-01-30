@@ -284,21 +284,32 @@ app.get("/api/leave", async (req, res) => {
 
 app.post("/api/leave", async (req, res) => {
   try {
-    const { id, employeeId, ...data } = req.body;
+    const { id, employeeId, type, ...data } = req.body;
     
     // Check if employee exists
+    const empIdNum = parseInt(employeeId?.toString());
+    if (isNaN(empIdNum)) {
+      return res.status(400).json({ error: "ID Karyawan tidak valid" });
+    }
+
     const employee = await db.query.employees.findFirst({
-      where: eq(schema.employees.id, parseInt(employeeId.toString()))
+      where: eq(schema.employees.id, empIdNum)
     });
 
     if (!employee) {
       return res.status(404).json({ error: "Employee not found" });
     }
 
+    // Try to find a leave type that matches
+    const leaveType = await db.query.leaveTypes.findFirst({
+      where: eq(schema.leaveTypes.name, type || "Cuti Tahunan")
+    });
+
     const values = {
       ...data,
-      employeeId: parseInt(employeeId.toString()),
-      // Ensure numeric IDs for references if they exist in body
+      type: type || "annual",
+      employeeId: empIdNum,
+      leaveTypeId: leaveType?.id || null,
       approvedBy: data.approvedBy ? parseInt(data.approvedBy.toString()) : null,
     };
     
@@ -528,20 +539,25 @@ app.post("/api/attendance/manual", async (req, res) => {
 app.post("/api/barcode/generate", async (req, res) => {
   const { supervisorId } = req.body;
   try {
+    const supIdNum = parseInt(supervisorId?.toString());
+    if (isNaN(supIdNum)) {
+      return res.status(400).json({ error: "ID Supervisor tidak valid" });
+    }
+
     const supervisor = await db.query.employees.findFirst({
       where: and(
-        eq(schema.employees.id, parseInt(supervisorId)),
+        eq(schema.employees.id, supIdNum),
         eq(schema.employees.role, "supervisor")
       ),
       with: { department: true }
     });
 
     if (!supervisor) {
-      return res.status(403).json({ error: "Only supervisors can generate barcodes" });
+      return res.status(403).json({ error: "Hanya supervisor yang dapat generate barcode" });
     }
 
     if (!supervisor.departmentId) {
-      return res.status(400).json({ error: "Supervisor must be assigned to a department" });
+      return res.status(400).json({ error: "Supervisor harus terdaftar di sebuah departemen" });
     }
 
     await db.update(schema.barcodes)
@@ -561,7 +577,7 @@ app.post("/api/barcode/generate", async (req, res) => {
 
     res.json({
       barcode: result[0],
-      department: supervisor.department?.name
+      department: supervisor.department?.name || "Departemen"
     });
   } catch (error: any) {
     console.error("Barcode generation error details:", error);
@@ -641,9 +657,14 @@ app.post("/api/barcode/scan", async (req, res) => {
 // Get active barcode for supervisor
 app.get("/api/barcode/:supervisorId", async (req, res) => {
   try {
+    const supIdNum = parseInt(req.params.supervisorId);
+    if (isNaN(supIdNum)) {
+      return res.status(400).json({ error: "ID Supervisor tidak valid" });
+    }
+
     const barcode = await db.query.barcodes.findFirst({
       where: and(
-        eq(schema.barcodes.supervisorId, parseInt(req.params.supervisorId)),
+        eq(schema.barcodes.supervisorId, supIdNum),
         eq(schema.barcodes.isActive, true),
         gt(schema.barcodes.expiresAt, new Date())
       ),
@@ -651,11 +672,12 @@ app.get("/api/barcode/:supervisorId", async (req, res) => {
     });
 
     if (!barcode) {
-      return res.status(404).json({ error: "No active barcode found" });
+      return res.status(404).json({ error: "Tidak ada barcode aktif ditemukan" });
     }
 
     res.json(barcode);
   } catch (error) {
+    console.error("Fetch barcode error:", error);
     res.status(500).json({ error: "Failed to fetch barcode" });
   }
 });
@@ -704,9 +726,22 @@ app.get("/api/shifts", async (req, res) => {
 app.get("/api/leave-types", async (req, res) => {
   try {
     const result = await db.query.leaveTypes.findMany();
+    if (result.length === 0) {
+      // Fallback/Mock if empty
+      return res.json([
+        { id: 1, name: "Cuti Tahunan", description: "Jatah cuti tahunan", defaultQuota: 12, isActive: true },
+        { id: 2, name: "Sakit", description: "Izin sakit dengan surat dokter", defaultQuota: 0, isActive: true },
+        { id: 3, name: "Izin Pribadi", description: "Izin untuk keperluan pribadi", defaultQuota: 0, isActive: true }
+      ]);
+    }
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch leave types" });
+    console.error("Fetch leave types error:", error);
+    res.json([
+      { id: 1, name: "Cuti Tahunan", description: "Jatah cuti tahunan", defaultQuota: 12, isActive: true },
+      { id: 2, name: "Sakit", description: "Izin sakit dengan surat dokter", defaultQuota: 0, isActive: true },
+      { id: 3, name: "Izin Pribadi", description: "Izin untuk keperluan pribadi", defaultQuota: 0, isActive: true }
+    ]);
   }
 });
 

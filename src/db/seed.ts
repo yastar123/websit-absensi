@@ -52,6 +52,13 @@ async function seed() {
     },
   ]).returning();
 
+  // Seed Leave Types
+  await db.insert(schema.leaveTypes).values([
+    { name: "Cuti Tahunan", description: "Jatah cuti tahunan", defaultQuota: 12, isActive: true },
+    { name: "Sakit", description: "Izin sakit dengan surat dokter", defaultQuota: 0, isActive: true },
+    { name: "Izin Pribadi", description: "Izin untuk keperluan pribadi", defaultQuota: 0, isActive: true },
+  ]).onConflictDoNothing();
+
   console.log("Seeding completed successfully!");
   process.exit(0);
 }
